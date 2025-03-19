@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Checkout Link</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container">
+        <h2>Create Checkout Link</h2>
+        <button class="btn" onclick="createCheckoutLink()">Generate Link</button>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        function createCheckoutLink() {
+            const myHeaders = new Headers();
+            myHeaders.append("Authorization", "Bearer pub_key");
+
+            const requestOptions = {
+                method: "GET",
+                headers: myHeaders,
+                redirect: "follow"
+            };
+
+            fetch("https://api.tsara.ng/v1/checkout/create?public_key=pub_key&trx_id=TEST-1234567893&email=johndo@gmail.com&amount=100&name=John Do&phone=08012345678&redirect_url=&currency=NGN", requestOptions)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === "success") {
+                        document.getElementById("response").innerHTML = `
+                            <p><strong>Checkout Link:</strong> <a href="${result.url}" target="_blank">${result.url}</a></p>
+                            <p><strong>Transaction ID:</strong> ${result.trx_id}</p>
+                            <p><strong>Account Details:</strong></p>
+                            <ul>
+                                <li><strong>Account Number:</strong> ${result.account.account_number}</li>
+                                <li><strong>Account Name:</strong> ${result.account.account_name}</li>
+                                <li><strong>Bank:</strong> ${result.account.bank_name} (${result.account.bank_code})</li>
+                            </ul>
+                        `;
+                    } else {
+                        document.getElementById("response").innerHTML = `<p>Error: ${result.message}</p>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById("response").innerHTML = `<p>Failed to create checkout link.</p>`;
+                });
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>
