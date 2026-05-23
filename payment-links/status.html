@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tsara Payment Link Status Example</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 880px; margin: 40px auto; padding: 0 16px; }
+        label { display: block; margin-top: 12px; font-weight: 600; }
+        input, select, button { width: 100%; padding: 10px; margin-top: 6px; box-sizing: border-box; }
+        button { cursor: pointer; }
+        pre { background: #111827; color: #f9fafb; padding: 16px; border-radius: 8px; overflow: auto; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card { border: 1px solid #d1d5db; border-radius: 8px; padding: 16px; margin-top: 16px; background: #f9fafb; }
+        .muted { color: #6b7280; }
+    </style>
+</head>
+
+<body>
+    <h1>Tsara Payment Link Status Example</h1>
+    <p>Update payment-link status with <code>POST /v1/payment-links/status</code>.</p>
+
+    <div class="row">
+        <div>
+            <label>Public Key</label>
+            <input id="public_key" value="pk_live_xxxxx">
+        </div>
+        <div>
+            <label>Payment Link UID</label>
+            <input id="uid" value="plink_123">
+        </div>
+    </div>
+
+    <label>Status</label>
+    <select id="status">
+        <option value="pending">pending</option>
+        <option value="active">active</option>
+        <option value="inactive">inactive</option>
+        <option value="expired">expired</option>
+    </select>
+
+    <button id="updateButton">Update Payment Link Status</button>
+
+    <div id="summary" class="card" style="display:none;">
+        <h2>Payment Link Summary</h2>
+        <div id="summaryContent" class="muted"></div>
+    </div>
+
+    <pre id="output">No request sent yet.</pre>
+
+    <script>
+        function renderSummary(result) {
+            const data = result && result.data ? result.data : null;
+            const card = document.getElementById('summary');
+            const content = document.getElementById('summaryContent');
+            if (!result || result.success !== true || !data) {
+                card.style.display = 'none';
+                content.textContent = '';
+                return;
+            }
+            card.style.display = 'block';
+            content.innerHTML = [
+                'ID: ' + (data.id || '-'),
+                'Title: ' + (data.title || '-'),
+                'Slug: ' + (data.slug || '-'),
+                'Status: ' + (data.status || '-'),
+                'URL: ' + (data.url || '-')
+            ].join('<br>');
+        }
+
+        async function updateStatus() {
+            const button = document.getElementById('updateButton');
+            const output = document.getElementById('output');
+            button.disabled = true;
+            output.textContent = 'Updating payment-link status...';
+            renderSummary(null);
+
+            const payload = {
+                uid: document.getElementById('uid').value,
+                status: document.getElementById('status').value
+            };
+
+            try {
+                const response = await fetch('https://api.tsara.ng/v1/payment-links/status', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + document.getElementById('public_key').value,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                renderSummary(result);
+                output.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                output.textContent = JSON.stringify({ success: false, message: String(error) }, null, 2);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        document.getElementById('updateButton').addEventListener('click', updateStatus);
+    </script>
+</body>
+
+</html>

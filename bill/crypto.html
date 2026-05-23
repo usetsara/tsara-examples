@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tsara Crypto Bill Example</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 880px; margin: 40px auto; padding: 0 16px; }
+        label { display: block; margin-top: 12px; font-weight: 600; }
+        input, select, button { width: 100%; padding: 10px; margin-top: 6px; box-sizing: border-box; }
+        button { cursor: pointer; }
+        pre { background: #111827; color: #f9fafb; padding: 16px; border-radius: 8px; overflow: auto; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card { border: 1px solid #d1d5db; border-radius: 8px; padding: 16px; margin-top: 16px; background: #f9fafb; }
+        .card h2 { margin-top: 0; font-size: 18px; }
+        .muted { color: #6b7280; }
+        .hint { margin-top: 12px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; padding: 12px; border-radius: 8px; }
+    </style>
+</head>
+
+<body>
+    <h1>Tsara Crypto Bill Example</h1>
+    <p>Create a crypto-funded bill order with <code>POST /v1/bill/crypto</code>.</p>
+
+    <div class="row">
+        <div>
+            <label>Public Key</label>
+            <input id="public_key" value="pk_live_xxxxx">
+        </div>
+        <div>
+            <label>Idempotency Key</label>
+            <input id="idempotency_key" value="bill-airtime-001">
+        </div>
+    </div>
+
+    <div class="row">
+        <div>
+            <label>Service</label>
+            <select id="service">
+                <option value="AIRTIME">AIRTIME</option>
+                <option value="DATA">DATA</option>
+                <option value="CABLETV">CABLETV</option>
+                <option value="UTILITY">UTILITY</option>
+            </select>
+        </div>
+        <div>
+            <label>Provider</label>
+            <input id="provider" value="MTN">
+        </div>
+    </div>
+
+    <div class="row">
+        <div>
+            <label>Amount (NGN)</label>
+            <input id="amount" type="number" value="2000">
+        </div>
+        <div>
+            <label>Asset</label>
+            <input id="asset" value="solana:usdc">
+        </div>
+    </div>
+
+    <label>Phone Number / Customer Number</label>
+    <input id="number" value="08012345678">
+
+    <button id="createButton">Create Crypto Bill</button>
+
+    <div class="hint">
+        Save the returned <code>trx_id</code>, <code>reference</code>, and crypto <code>reference</code> for <code>bill/crypto-fetch.html</code> and <code>bill/crypto-reconcile.html</code>.
+    </div>
+
+    <div id="summary" class="card" style="display:none;">
+        <h2>Bill Summary</h2>
+        <div id="summaryContent" class="muted"></div>
+    </div>
+
+    <pre id="output">No request sent yet.</pre>
+
+    <script>
+        function renderSummary(result) {
+            const summary = document.getElementById('summary');
+            const content = document.getElementById('summaryContent');
+            const data = result && result.data ? result.data : null;
+            const crypto = data && data.crypto ? data.crypto : null;
+
+            if (!result || result.success !== true || !data) {
+                summary.style.display = 'none';
+                content.textContent = '';
+                return;
+            }
+
+            summary.style.display = 'block';
+            content.innerHTML = [
+                'Reference: ' + (data.reference || '-'),
+                'Transaction ID: ' + (data.trx_id || '-'),
+                'Status: ' + (data.status || '-'),
+                'Service: ' + (data.service || '-'),
+                'Provider: ' + (data.provider || '-'),
+                crypto ? 'Crypto Payment: ' + [crypto.reference, crypto.network_asset, crypto.amount, crypto.deposit_address].filter(Boolean).join(' / ') : 'Crypto Payment: -'
+            ].join('<br>');
+        }
+
+        async function createCryptoBill() {
+            const button = document.getElementById('createButton');
+            const output = document.getElementById('output');
+            const service = document.getElementById('service').value;
+            const number = document.getElementById('number').value.trim();
+
+            button.disabled = true;
+            output.textContent = 'Creating crypto bill order...';
+            renderSummary(null);
+
+            const payload = {
+                service: service,
+                provider: document.getElementById('provider').value,
+                amount: Number(document.getElementById('amount').value),
+                asset: document.getElementById('asset').value,
+                idempotency_key: document.getElementById('idempotency_key').value
+            };
+
+            if (service === 'AIRTIME' || service === 'DATA') {
+                payload.phone_number = number;
+            } else {
+                payload.number = number;
+            }
+
+            if (service === 'DATA') {
+                payload.bundle_code = '20';
+            }
+
+            if (service === 'CABLETV') {
+                payload.bundle_code = 'DSTV_COMPACT';
+            }
+
+            if (service === 'UTILITY') {
+                payload.vend_type = 'PREPAID';
+            }
+
+            try {
+                const response = await fetch('https://api.tsara.ng/v1/bill/crypto', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + document.getElementById('public_key').value,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                renderSummary(result);
+                output.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                const result = { success: false, message: String(error) };
+                renderSummary(result);
+                output.textContent = JSON.stringify(result, null, 2);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        document.getElementById('createButton').addEventListener('click', createCryptoBill);
+    </script>
+</body>
+
+</html>

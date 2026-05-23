@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tsara Stablecoin Offramp Status Example</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 880px; margin: 40px auto; padding: 0 16px; }
+        label { display: block; margin-top: 12px; font-weight: 600; }
+        input, button { width: 100%; padding: 10px; margin-top: 6px; box-sizing: border-box; }
+        button { cursor: pointer; }
+        pre { background: #111827; color: #f9fafb; padding: 16px; border-radius: 8px; overflow: auto; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card { border: 1px solid #d1d5db; border-radius: 8px; padding: 16px; margin-top: 16px; background: #f9fafb; }
+        .card h2 { margin-top: 0; font-size: 18px; }
+        .muted { color: #6b7280; }
+    </style>
+</head>
+
+<body>
+    <h1>Tsara Stablecoin Offramp Status Example</h1>
+    <p>Refresh offramp status with <code>GET /v1/stablecoin/offramp/status?provider_reference=...&refresh=1</code>.</p>
+
+    <div class="row">
+        <div>
+            <label>Public Key</label>
+            <input id="public_key" value="pk_live_xxxxx">
+        </div>
+        <div>
+            <label>Provider Reference</label>
+            <input id="provider_reference" value="provider-guid-here">
+        </div>
+    </div>
+
+    <button id="statusButton">Refresh Offramp Status</button>
+
+    <div id="summary" class="card" style="display:none;">
+        <h2>Offramp Status</h2>
+        <div id="summaryContent" class="muted"></div>
+    </div>
+
+    <pre id="output">No request sent yet.</pre>
+
+    <script>
+        function renderSummary(result) {
+            const summary = document.getElementById('summary');
+            const content = document.getElementById('summaryContent');
+            const data = result && result.data ? result.data : null;
+            const beneficiary = data && data.beneficiary ? data.beneficiary : null;
+
+            if (!result || result.success !== true || !data) {
+                summary.style.display = 'none';
+                content.textContent = '';
+                return;
+            }
+
+            summary.style.display = 'block';
+            content.innerHTML = [
+                'Reference: ' + (data.reference || '-'),
+                'Provider Reference: ' + (data.provider_reference || '-'),
+                'Status: ' + (data.status || '-'),
+                'Fiat Amount: ' + (data.amount_fiat || '-'),
+                'Stablecoin Amount: ' + (data.amount_stablecoin || '-'),
+                beneficiary ? 'Beneficiary: ' + [beneficiary.bank_name, beneficiary.account_number, beneficiary.account_name].filter(Boolean).join(' / ') : 'Beneficiary: -'
+            ].join('<br>');
+        }
+
+        async function refreshStatus() {
+            const button = document.getElementById('statusButton');
+            const output = document.getElementById('output');
+            const providerReference = encodeURIComponent(document.getElementById('provider_reference').value.trim());
+
+            button.disabled = true;
+            output.textContent = 'Refreshing offramp status...';
+            renderSummary(null);
+
+            try {
+                const response = await fetch('https://api.tsara.ng/v1/stablecoin/offramp/status?provider_reference=' + providerReference + '&refresh=1', {
+                    headers: {
+                        'Authorization': 'Bearer ' + document.getElementById('public_key').value
+                    }
+                });
+
+                const result = await response.json();
+                renderSummary(result);
+                output.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                const result = { success: false, message: String(error) };
+                output.textContent = JSON.stringify(result, null, 2);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        document.getElementById('statusButton').addEventListener('click', refreshStatus);
+    </script>
+</body>
+
+</html>

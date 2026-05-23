@@ -4,56 +4,127 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Use Checkout</title>
+    <title>Tsara Inline Checkout Example</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 </head>
 
-<body>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <h1 class="h3 mb-3">Tsara Inline Checkout</h1>
+                        <p class="text-muted mb-4">
+                            This example opens Tsara checkout with the inline script. Replace the placeholder values with your real public key,
+                            customer data, and redirect URL.
+                        </p>
 
-    <div class="container">
-        <button class="btn bg-primary pay">Pay</button>
+                        <div class="mb-4">
+                            <h2 class="h6">Sample payload</h2>
+                            <pre class="bg-dark text-light p-3 rounded small mb-0"><code>{
+  "public_key": "pk_live_xxxxx",
+  "trx_id": "ORDER-1234567890",
+  "amount": 1000,
+  "currency": "NGN",
+  "email": "customer@example.com",
+  "phone": "08012345678",
+  "name": "Test Client",
+  "redirect_url": "https://yourwebsite.com/checkout/return"
+}</code></pre>
+                        </div>
+
+                        <button id="payButton" class="btn btn-primary">Pay with Tsara</button>
+                        <div id="status" class="mt-3 small text-muted">Idle.</div>
+                        <pre id="result" class="bg-light border rounded p-3 mt-3 small mb-0" style="min-height: 120px;">No callback received yet.</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        function fundWithTsara(data) {
-            var paymentInfo = {
-                public_key: "public_key",
+        function setStatus(message, className) {
+            const status = document.getElementById('status');
+            status.className = 'mt-3 small ' + (className || 'text-muted');
+            status.textContent = message;
+        }
+
+        function setResult(payload) {
+            document.getElementById('result').textContent = JSON.stringify(payload, null, 2);
+        }
+
+        function buildCheckoutPayload(data) {
+            return {
+                public_key: 'pk_live_xxxxx',
                 trx_id: data.trx_id,
                 amount: data.amount,
+                amount_type: 'fiat',
+                currency: 'NGN',
                 email: data.email,
-                currency: "NGN",
                 phone: data.phone,
                 name: data.name,
                 meta: {
                     customer_id: data.user_id,
+                    source: 'tsara-examples-inline'
                 },
                 customer: {
                     email: data.email,
                     phone: data.phone,
-                    name: data.name,
+                    name: data.name
                 },
                 redirect_url: data.redirect_url,
                 customizations: {
-                    title: "Business Name",
-                    description: "Fund Wallet",
-                    logo: "",
+                    title: 'Business Name',
+                    description: 'Fund Wallet',
+                    logo: ''
+                },
+                callback: function (response) {
+                    setStatus('Checkout completed.', 'mt-3 small text-success');
+                    setResult({ type: 'success', response: response });
+                },
+                onClose: function () {
+                    setStatus('Checkout closed by user.', 'mt-3 small text-warning');
+                    setResult({ type: 'closed' });
+                },
+                onError: function (error) {
+                    setStatus('Checkout failed.', 'mt-3 small text-danger');
+                    setResult({ type: 'error', error: error });
                 }
             };
-            tsara.pay(paymentInfo);
         }
 
-        document.querySelector('.pay').addEventListener('click', function (e) {
-            fundWithTsara({
-                trx_id: '1234567890',
+        function openCheckout() {
+            const button = document.getElementById('payButton');
+
+            button.disabled = true;
+            setStatus('Opening checkout...', 'mt-3 small text-muted');
+            setResult({ type: 'pending' });
+
+            const payload = buildCheckoutPayload({
+                trx_id: 'ORDER-1234567890',
                 amount: 1000,
-                email: 'test@client.com',
+                email: 'customer@example.com',
                 phone: '08012345678',
                 name: 'Test Client',
                 user_id: '123456',
-                redirect_url: 'https://yourwebsite.com/redirect'
+                redirect_url: 'https://yourwebsite.com/checkout/return'
             });
-        });
+
+            try {
+                tsara.pay(payload);
+                setStatus('Checkout opened.', 'mt-3 small text-success');
+            } catch (error) {
+                console.error(error);
+                setStatus('Failed to open checkout.', 'mt-3 small text-danger');
+                setResult({ type: 'exception', error: String(error) });
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        document.getElementById('payButton').addEventListener('click', openCheckout);
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"

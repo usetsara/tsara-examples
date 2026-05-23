@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Payout Name Enquiry</title>
+  <style>body{font-family:Arial,sans-serif;max-width:760px;margin:40px auto;padding:0 16px;color:#111827}.card{border:1px solid #d1d5db;border-radius:12px;padding:20px;background:#f9fafb}label{display:block;font-weight:700;margin:12px 0 6px}input,button{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #cbd5e1;font:inherit}button{background:#7c2d12;color:#fff;border:none;cursor:pointer;margin-top:14px}pre{background:#0f172a;color:#e2e8f0;padding:16px;border-radius:10px;overflow:auto}</style>
+</head>
+<body>
+  <h1>Payout Name Enquiry</h1>
+  <div class="card">
+    <label>Public Key</label><input id="publicKey" type="text" placeholder="pk_live_xxxxx">
+    <label>Bank Code</label><input id="bankCode" type="text" value="090286">
+    <label>Account Number</label><input id="accountNumber" type="text" value="0110000000">
+    <button id="run">Run Name Enquiry</button>
+  </div>
+  <h2>Response</h2>
+  <pre id="output">{}</pre>
+  <script>
+    document.getElementById('run').addEventListener('click', async function () {
+      const res = await fetch('https://api.tsara.ng/v1/payouts/name-enquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + document.getElementById('publicKey').value.trim() },
+        body: JSON.stringify({ bank_code: document.getElementById('bankCode').value.trim(), account_number: document.getElementById('accountNumber').value.trim() })
+      });
+      const text = await res.text();
+      try { document.getElementById('output').textContent = JSON.stringify(JSON.parse(text), null, 2); } catch (e) { document.getElementById('output').textContent = text; }
+    });
+  </script>
+</body>
+</html>

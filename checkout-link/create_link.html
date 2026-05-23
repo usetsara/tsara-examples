@@ -10,45 +10,64 @@
 </head>
 
 <body>
-    <div class="container">
+    <div class="container py-4">
         <h2>Create Checkout Link</h2>
-        <button class="btn" onclick="createCheckoutLink()">Generate Link</button>
-        <div id="response"></div>
+        <p class="text-muted">Uses the canonical <code>POST /v1/checkout</code> API route.</p>
+        <button class="btn btn-primary" onclick="createCheckoutLink()">Generate Link</button>
+        <div id="response" class="mt-3"></div>
     </div>
 
     <script>
-        function createCheckoutLink() {
-            const myHeaders = new Headers();
-            myHeaders.append("Authorization", "Bearer pub_key");
+        async function createCheckoutLink() {
+            const body = new URLSearchParams({
+                public_key: 'pk_live_xxxxx',
+                trx_id: 'TEST-1234567893',
+                email: 'johndoe@gmail.com',
+                name: 'John Doe',
+                phone: '08012345678',
+                amount: '1000',
+                amount_type: 'fiat',
+                currency: 'NGN',
+                redirect_url: 'https://yourwebsite.com/checkout/return'
+            });
 
             const requestOptions = {
-                method: "GET",
-                headers: myHeaders,
-                redirect: "follow"
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                },
+                body
             };
 
-            fetch("https://api.tsara.ng/v1/checkout/create?public_key=pub_key&trx_id=TEST-1234567893&email=johndo@gmail.com&amount=100&name=John Do&phone=08012345678&redirect_url=&currency=NGN", requestOptions)
-                .then(response => response.json())
-                .then(result => {
-                    if (result.status === "success") {
-                        document.getElementById("response").innerHTML = `
-                            <p><strong>Checkout Link:</strong> <a href="${result.url}" target="_blank">${result.url}</a></p>
-                            <p><strong>Transaction ID:</strong> ${result.trx_id}</p>
+            try {
+                const response = await fetch('https://api.tsara.ng/v1/checkout', requestOptions);
+                const result = await response.json();
+                const data = result.data || {};
+                const fiat = (data.account && data.account.fiat) || {};
+                const checkoutUrl = data.checkout_url || result.url || null;
+                const trxId = data.id || result.trx_id || 'N/A';
+
+                if (result.success && checkoutUrl) {
+                    document.getElementById('response').innerHTML = `
+                        <div class="alert alert-success">
+                            <p><strong>Checkout Link:</strong> <a href="${checkoutUrl}" target="_blank" rel="noopener noreferrer">${checkoutUrl}</a></p>
+                            <p><strong>Transaction ID:</strong> ${trxId}</p>
                             <p><strong>Account Details:</strong></p>
                             <ul>
-                                <li><strong>Account Number:</strong> ${result.account.account_number}</li>
-                                <li><strong>Account Name:</strong> ${result.account.account_name}</li>
-                                <li><strong>Bank:</strong> ${result.account.bank_name} (${result.account.bank_code})</li>
+                                <li><strong>Account Number:</strong> ${fiat.account_number || 'N/A'}</li>
+                                <li><strong>Account Name:</strong> ${fiat.account_name || 'N/A'}</li>
+                                <li><strong>Bank:</strong> ${fiat.bank_name || 'N/A'} ${fiat.bank_code ? `(${fiat.bank_code})` : ''}</li>
                             </ul>
-                        `;
-                    } else {
-                        document.getElementById("response").innerHTML = `<p>Error: ${result.message}</p>`;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    document.getElementById("response").innerHTML = `<p>Failed to create checkout link.</p>`;
-                });
+                        </div>
+                    `;
+                    return;
+                }
+
+                document.getElementById('response').innerHTML = `<div class="alert alert-danger">Error: ${result.message || 'Unable to create checkout session.'}</div>`;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('response').innerHTML = '<div class="alert alert-danger">Failed to create checkout link.</div>';
+            }
         }
     </script>
 

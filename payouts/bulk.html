@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create Bulk Payout</title>
+  <style>body{font-family:Arial,sans-serif;max-width:860px;margin:40px auto;padding:0 16px;color:#111827}.card{border:1px solid #d1d5db;border-radius:12px;padding:20px;background:#f9fafb}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}label{display:block;font-weight:700;margin:12px 0 6px}input,textarea,button{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #cbd5e1;font:inherit}textarea{min-height:220px}button{background:#7c2d12;color:#fff;border:none;cursor:pointer;margin-top:14px}pre{background:#0f172a;color:#e2e8f0;padding:16px;border-radius:10px;overflow:auto}</style>
+</head>
+<body>
+  <h1>Create Bulk Payout</h1>
+  <div class="card">
+    <div class="grid">
+      <div><label>Public Key</label><input id="publicKey" type="text" placeholder="pk_live_xxxxx"></div>
+      <div><label>Source Account Number</label><input id="sourceAccountNumber" type="text" value="0111632855"></div>
+      <div><label>Reference</label><input id="reference" type="text" value="bulk_payout_001"></div>
+      <div><label>Idempotency Key</label><input id="idempotencyKey" type="text" value="bulk-idem-001"></div>
+    </div>
+    <label>Narration</label><input id="narration" type="text" value="Weekly settlements">
+    <label>Items JSON</label>
+    <textarea id="items">[
+  {
+    "reference": "item_001",
+    "bank_code": "090286",
+    "account_number": "0110000000",
+    "amount": 5000
+  },
+  {
+    "reference": "item_002",
+    "bank_code": "100004",
+    "account_number": "8093930950",
+    "amount": 7000
+  }
+]</textarea>
+    <button id="run">Create Bulk Payout</button>
+  </div>
+  <h2>Response</h2>
+  <pre id="output">{}</pre>
+  <script>
+    document.getElementById('run').addEventListener('click', async function () {
+      let items;
+      try { items = JSON.parse(document.getElementById('items').value); } catch (e) { document.getElementById('output').textContent = JSON.stringify({ error: 'Invalid items JSON', detail: e.message }, null, 2); return; }
+      const payload = {
+        reference: document.getElementById('reference').value.trim(),
+        source_account_number: document.getElementById('sourceAccountNumber').value.trim(),
+        narration: document.getElementById('narration').value.trim(),
+        idempotency_key: document.getElementById('idempotencyKey').value.trim(),
+        items: items
+      };
+      const res = await fetch('https://api.tsara.ng/v1/payouts/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + document.getElementById('publicKey').value.trim() },
+        body: JSON.stringify(payload)
+      });
+      const text = await res.text();
+      try { document.getElementById('output').textContent = JSON.stringify(JSON.parse(text), null, 2); } catch (e) { document.getElementById('output').textContent = text; }
+    });
+  </script>
+</body>
+</html>

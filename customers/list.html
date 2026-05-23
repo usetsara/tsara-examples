@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tsara Customer List Example</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 980px; margin: 40px auto; padding: 0 16px; }
+        label { display: block; margin-top: 12px; font-weight: 600; }
+        input, select, button { width: 100%; padding: 10px; margin-top: 6px; box-sizing: border-box; }
+        button { cursor: pointer; }
+        pre { background: #111827; color: #f9fafb; padding: 16px; border-radius: 8px; overflow: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        th, td { border: 1px solid #d1d5db; padding: 10px; text-align: left; }
+        .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    </style>
+</head>
+
+<body>
+    <h1>Tsara Customer List Example</h1>
+    <p>List or search customers with <code>GET /v1/customers</code>.</p>
+
+    <div class="row">
+        <div>
+            <label>Public Key</label>
+            <input id="public_key" value="pk_live_xxxxx">
+        </div>
+        <div>
+            <label>Search</label>
+            <input id="search" value="">
+        </div>
+        <div>
+            <label>Type</label>
+            <select id="type">
+                <option value="">all</option>
+                <option value="individual">individual</option>
+                <option value="business">business</option>
+            </select>
+        </div>
+        <div>
+            <label>Limit</label>
+            <input id="limit" type="number" value="10">
+        </div>
+    </div>
+
+    <button id="listButton">Load Customers</button>
+    <table id="table" style="display:none;">
+        <thead>
+            <tr><th>ID</th><th>Name</th><th>Email</th><th>Type</th><th>Identity Status</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+    </table>
+    <pre id="output">No request sent yet.</pre>
+
+    <script>
+        function renderRows(result) {
+            const table = document.getElementById('table');
+            const rows = document.getElementById('rows');
+            rows.innerHTML = '';
+            const items = result && Array.isArray(result.data) ? result.data : [];
+            if (!result || result.success !== true || items.length === 0) {
+                table.style.display = 'none';
+                return;
+            }
+            table.style.display = 'table';
+            rows.innerHTML = items.map(function (item) {
+                return '<tr><td>' + (item.id || '-') + '</td><td>' + (item.name || '-') + '</td><td>' + (item.email || '-') + '</td><td>' + (item.type || '-') + '</td><td>' + (item.identity_status || '-') + '</td></tr>';
+            }).join('');
+        }
+
+        async function loadCustomers() {
+            const button = document.getElementById('listButton');
+            const output = document.getElementById('output');
+            const query = new URLSearchParams();
+            const search = document.getElementById('search').value.trim();
+            const type = document.getElementById('type').value;
+            const limit = document.getElementById('limit').value;
+            if (search) query.set('search', search);
+            if (type) query.set('type', type);
+            query.set('limit', limit);
+            query.set('page', '1');
+
+            button.disabled = true;
+            output.textContent = 'Loading customers...';
+            renderRows(null);
+
+            try {
+                const response = await fetch('https://api.tsara.ng/v1/customers?' + query.toString(), {
+                    headers: { 'Authorization': 'Bearer ' + document.getElementById('public_key').value }
+                });
+                const result = await response.json();
+                renderRows(result);
+                output.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                output.textContent = JSON.stringify({ success: false, message: String(error) }, null, 2);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        document.getElementById('listButton').addEventListener('click', loadCustomers);
+    </script>
+</body>
+
+</html>

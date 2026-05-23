@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tsara Crypto Bill Fetch Example</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 880px; margin: 40px auto; padding: 0 16px; }
+        label { display: block; margin-top: 12px; font-weight: 600; }
+        input, button { width: 100%; padding: 10px; margin-top: 6px; box-sizing: border-box; }
+        button { cursor: pointer; }
+        pre { background: #111827; color: #f9fafb; padding: 16px; border-radius: 8px; overflow: auto; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card { border: 1px solid #d1d5db; border-radius: 8px; padding: 16px; margin-top: 16px; background: #f9fafb; }
+        .card h2 { margin-top: 0; font-size: 18px; }
+        .muted { color: #6b7280; }
+    </style>
+</head>
+
+<body>
+    <h1>Tsara Crypto Bill Fetch Example</h1>
+    <p>Fetch a crypto bill order with <code>GET /v1/bill/crypto</code>.</p>
+
+    <div class="row">
+        <div>
+            <label>Public Key</label>
+            <input id="public_key" value="pk_live_xxxxx">
+        </div>
+        <div>
+            <label>Transaction ID</label>
+            <input id="trx_id" value="ts-1234567890">
+        </div>
+    </div>
+
+    <label>Reference (optional instead of trx_id)</label>
+    <input id="reference" value="">
+
+    <button id="fetchButton">Fetch Crypto Bill</button>
+
+    <div id="summary" class="card" style="display:none;">
+        <h2>Crypto Bill Summary</h2>
+        <div id="summaryContent" class="muted"></div>
+    </div>
+
+    <pre id="output">No request sent yet.</pre>
+
+    <script>
+        function renderSummary(result) {
+            const summary = document.getElementById('summary');
+            const content = document.getElementById('summaryContent');
+            const data = result && result.data ? result.data : null;
+
+            if (!result || result.success !== true || !data) {
+                summary.style.display = 'none';
+                content.textContent = '';
+                return;
+            }
+
+            summary.style.display = 'block';
+            content.innerHTML = [
+                'Transaction ID: ' + (data.trx_id || '-'),
+                'Reference: ' + (data.reference || '-'),
+                'Status: ' + (data.status || '-'),
+                'Payment Status: ' + (data.payment_status || '-'),
+                'Execution Status: ' + (data.bill_execution_status || '-'),
+                'Business Debit Status: ' + (data.business_debit_status || '-')
+            ].join('<br>');
+        }
+
+        async function fetchCryptoBill() {
+            const button = document.getElementById('fetchButton');
+            const output = document.getElementById('output');
+            const trxId = document.getElementById('trx_id').value.trim();
+            const reference = document.getElementById('reference').value.trim();
+            const query = new URLSearchParams();
+
+            if (trxId) {
+                query.set('trx_id', trxId);
+            }
+            if (reference) {
+                query.set('reference', reference);
+            }
+
+            button.disabled = true;
+            output.textContent = 'Fetching crypto bill...';
+            renderSummary(null);
+
+            try {
+                const response = await fetch('https://api.tsara.ng/v1/bill/crypto?' + query.toString(), {
+                    headers: {
+                        'Authorization': 'Bearer ' + document.getElementById('public_key').value
+                    }
+                });
+
+                const result = await response.json();
+                renderSummary(result);
+                output.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                const result = { success: false, message: String(error) };
+                output.textContent = JSON.stringify(result, null, 2);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        document.getElementById('fetchButton').addEventListener('click', fetchCryptoBill);
+    </script>
+</body>
+
+</html>

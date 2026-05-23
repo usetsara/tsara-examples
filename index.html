@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tsara Examples</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 980px; margin: 40px auto; padding: 0 16px; color: #111827; }
+        h1, h2 { margin-bottom: 8px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+        .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; }
+        .card p { color: #4b5563; }
+        ul { padding-left: 18px; }
+        a { color: #2563eb; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        code { background: #e5e7eb; padding: 2px 6px; border-radius: 4px; }
+    </style>
+</head>
+
+<body>
+    <h1>Tsara API Examples</h1>
+    <p>Small browser examples for the current canonical Tsara routes.</p>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Checkout</h2>
+            <p>Hosted checkout and checkout-link creation.</p>
+            <ul>
+                <li><a href="checkout/index.html">Inline checkout</a></li>
+                <li><a href="checkout-link/create_link.html">Create checkout link</a></li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Customers</h2>
+            <p>Customer creation, listing, and update.</p>
+            <ul>
+                <li><a href="customers/create.html">Create customer</a></li>
+                <li><a href="customers/list.html">List customers</a></li>
+                <li><a href="customers/update.html">Update customer</a></li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Payment Links</h2>
+            <p>Payment link create, list, status, and transactions.</p>
+            <ul>
+                <li><a href="payment-links/create.html">Create payment link</a></li>
+                <li><a href="payment-links/list.html">List payment links</a></li>
+                <li><a href="payment-links/status.html">Update payment-link status</a></li>
+                <li><a href="payment-links/transactions.html">List payment-link transactions</a></li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Stablecoin</h2>
+            <p>Canonical OnSwitch-backed payment rails.</p>
+            <ul>
+                <li><a href="stablecoin/onramp.html">Create onramp</a></li>
+                <li><a href="stablecoin/onramp-status.html">Refresh onramp status</a></li>
+                <li><a href="stablecoin/offramp.html">Create offramp</a></li>
+                <li><a href="stablecoin/offramp-quote.html">Quote offramp</a></li>
+                <li><a href="stablecoin/offramp-status.html">Refresh offramp status</a></li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Bill</h2>
+            <p>Direct and crypto-funded bill payment flows.</p>
+            <ul>
+                <li><a href="bill/airtime.html">Buy airtime</a></li>
+                <li><a href="bill/electricity.html">Buy electricity</a></li>
+                <li><a href="bill/crypto.html">Create crypto bill</a></li>
+                <li><a href="bill/crypto-fetch.html">Fetch crypto bill</a></li>
+                <li><a href="bill/crypto-reconcile.html">Reconcile crypto bill</a></li>
+                <li><a href="bill/crypto-retry.html">Retry crypto bill</a></li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Payouts</h2>
+            <p>Scheduler-backed single and bulk payouts from a business account.</p>
+            <ul>
+                <li><a href="payouts/name-enquiry.html">Payout name enquiry</a></li>
+                <li><a href="payouts/single.html">Create single payout</a></li>
+                <li><a href="payouts/bulk.html">Create bulk payout</a></li>
+                <li><a href="payouts/fetch.html">Fetch payout</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <h2 style="margin-top: 32px;">Notes</h2>
+    <ul>
+        <li>Replace placeholder keys and references before testing.</li>
+        <li>Stablecoin status refresh examples use <code>provider_reference</code> plus <code>refresh=1</code>.</li>
+        <li>Bill crypto support flow uses fetch, reconcile, and retry as separate support operations.</li>
+        <li>Payout flows are asynchronous; create returns a local pending state and later reads show processing or final status.</li>
+    </ul>
+</body>
+
+</html>

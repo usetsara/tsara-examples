@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tsara Payment Link Transactions Example</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1100px; margin: 40px auto; padding: 0 16px; }
+        label { display: block; margin-top: 12px; font-weight: 600; }
+        input, select, button { width: 100%; padding: 10px; margin-top: 6px; box-sizing: border-box; }
+        button { cursor: pointer; }
+        pre { background: #111827; color: #f9fafb; padding: 16px; border-radius: 8px; overflow: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        th, td { border: 1px solid #d1d5db; padding: 10px; text-align: left; }
+        .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    </style>
+</head>
+
+<body>
+    <h1>Tsara Payment Link Transactions Example</h1>
+    <p>List payment-link transactions with <code>GET /v1/payment-links/transactions</code>.</p>
+
+    <div class="row">
+        <div>
+            <label>Public Key</label>
+            <input id="public_key" value="pk_live_xxxxx">
+        </div>
+        <div>
+            <label>Payment Link UID</label>
+            <input id="uid" value="">
+        </div>
+        <div>
+            <label>Status</label>
+            <select id="status">
+                <option value="">all</option>
+                <option value="pending">pending</option>
+                <option value="success">success</option>
+                <option value="failed">failed</option>
+            </select>
+        </div>
+        <div>
+            <label>Customer Email</label>
+            <input id="customer_email" value="">
+        </div>
+        <div>
+            <label>Limit</label>
+            <input id="limit" type="number" value="10">
+        </div>
+    </div>
+
+    <button id="listButton">Load Transactions</button>
+    <table id="table" style="display:none;">
+        <thead>
+            <tr><th>Transaction ID</th><th>Reference</th><th>Status</th><th>Amount</th><th>Customer Email</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+    </table>
+    <pre id="output">No request sent yet.</pre>
+
+    <script>
+        function renderRows(result) {
+            const table = document.getElementById('table');
+            const rows = document.getElementById('rows');
+            rows.innerHTML = '';
+            const items = result && Array.isArray(result.data) ? result.data : [];
+            if (!result || result.success !== true || items.length === 0) {
+                table.style.display = 'none';
+                return;
+            }
+            table.style.display = 'table';
+            rows.innerHTML = items.map(function (item) {
+                return '<tr><td>' + (item.trx_id || '-') + '</td><td>' + (item.reference || '-') + '</td><td>' + (item.status || '-') + '</td><td>' + (item.amount || '-') + '</td><td>' + (item.customer_email || '-') + '</td></tr>';
+            }).join('');
+        }
+
+        async function loadTransactions() {
+            const button = document.getElementById('listButton');
+            const output = document.getElementById('output');
+            const query = new URLSearchParams();
+            const uid = document.getElementById('uid').value.trim();
+            const status = document.getElementById('status').value;
+            const customerEmail = document.getElementById('customer_email').value.trim();
+            const limit = document.getElementById('limit').value;
+            if (uid) query.set('uid', uid);
+            if (status) query.set('status', status);
+            if (customerEmail) query.set('customer_email', customerEmail);
+            query.set('limit', limit);
+            query.set('page', '1');
+
+            button.disabled = true;
+            output.textContent = 'Loading payment-link transactions...';
+            renderRows(null);
+
+            try {
+                const response = await fetch('https://api.tsara.ng/v1/payment-links/transactions?' + query.toString(), {
+                    headers: { 'Authorization': 'Bearer ' + document.getElementById('public_key').value }
+                });
+                const result = await response.json();
+                renderRows(result);
+                output.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                output.textContent = JSON.stringify({ success: false, message: String(error) }, null, 2);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        document.getElementById('listButton').addEventListener('click', loadTransactions);
+    </script>
+</body>
+
+</html>

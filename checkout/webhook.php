@@ -1,28 +1,60 @@
 <?php
-// only a post with tsara signature header gets our attention
-if ((strtoupper($_SERVER['REQUEST_METHOD']) != 'POST') || !array_key_exists('HTTP_X_TSARA_SIGNATURE', $_SERVER)) {
+// Example Tsara webhook handler.
+// Replace the placeholder secret with your real webhook secret.
+
+const TSARA_WEBHOOK_SECRET = 'sk_webhook_xxxxx';
+
+if (strtoupper($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+    http_response_code(405);
+    echo 'Method Not Allowed';
+    exit;
+}
+
+$signature = $_SERVER['HTTP_X_TSARA_SIGNATURE'] ?? null;
+if (!$signature) {
     http_response_code(400);
-    exit();
+    echo 'Missing signature';
+    exit;
 }
 
-// Retrieve the request's body
-$input = @file_get_contents("php://input");
-define('TSARA_SECRET_KEY', 'secret_key');
+$payload = file_get_contents('php://input');
+if ($payload === false || $payload === '') {
+    http_response_code(400);
+    echo 'Empty payload';
+    exit;
+}
 
-// validate event do all at once to avoid timing attack
-if ($_SERVER['HTTP_X_TSARA_SIGNATURE'] !== hash_hmac('sha512', $input, TSARA_SECRET_KEY)) {
+$expectedSignature = hash_hmac('sha512', $payload, TSARA_WEBHOOK_SECRET);
+if (!hash_equals($expectedSignature, $signature)) {
     http_response_code(401);
-    exit();
+    echo 'Invalid signature';
+    exit;
 }
 
-
-
-// parse event (which is json string) as object
-// Do something - that will not take long - with $event
-$event = json_decode($input);
-
-if ($event->event == 'payment.success') {
-    $data = $event->data;
-    // Take Action
+$event = json_decode($payload, true);
+if (!is_array($event)) {
+    http_response_code(400);
+    echo 'Invalid JSON';
+    exit;
 }
-exit();
+
+$eventType = $event['event'] ?? null;
+$data = $event['data'] ?? [];
+
+switch ($eventType) {
+    case 'payment.success':
+        // Example: mark the local order as paid using your own transaction lookup.
+        $reference = $data['reference'] ?? null;
+        $amount = $data['amount'] ?? null;
+
+        // TODO: persist the successful payment in your database.
+        error_log('Tsara payment success for reference: ' . ($reference ?? 'unknown') . ' amount: ' . ($amount ?? 'unknown'));
+        break;
+
+    default:
+        // Ignore events you do not handle yet, but still acknowledge receipt.
+        break;
+}
+
+http_response_code(200);
+echo 'OK';

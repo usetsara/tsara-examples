@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create Single Payout</title>
+  <style>body{font-family:Arial,sans-serif;max-width:860px;margin:40px auto;padding:0 16px;color:#111827}.card{border:1px solid #d1d5db;border-radius:12px;padding:20px;background:#f9fafb}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}label{display:block;font-weight:700;margin:12px 0 6px}input,button{width:100%;padding:10px 12px;border-radius:8px;border:1px solid #cbd5e1;font:inherit}button{background:#7c2d12;color:#fff;border:none;cursor:pointer;margin-top:14px}.summary{margin:18px 0;padding:16px;border:1px solid #d1d5db;border-radius:12px;background:#fff;display:none}.summary div{margin:6px 0}pre{background:#0f172a;color:#e2e8f0;padding:16px;border-radius:10px;overflow:auto}</style>
+</head>
+<body>
+  <h1>Create Single Payout</h1>
+  <div class="card">
+    <div class="grid">
+      <div><label>Public Key</label><input id="publicKey" type="text" placeholder="pk_live_xxxxx"></div>
+      <div><label>Source Account Number</label><input id="sourceAccountNumber" type="text" value="0111632855"></div>
+      <div><label>Reference</label><input id="reference" type="text" value="payout_001"></div>
+      <div><label>Idempotency Key</label><input id="idempotencyKey" type="text" value="payout-idem-001"></div>
+      <div><label>Amount</label><input id="amount" type="number" value="5000"></div>
+      <div><label>Narration</label><input id="narration" type="text" value="Vendor payout"></div>
+      <div><label>Bank Code</label><input id="bankCode" type="text" value="090286"></div>
+      <div><label>Account Number</label><input id="accountNumber" type="text" value="0110000000"></div>
+    </div>
+    <button id="run">Create Single Payout</button>
+  </div>
+  <div id="summary" class="summary">
+    <div><strong>Reference:</strong> <span id="summaryReference">-</span></div>
+    <div><strong>Payout ID:</strong> <span id="summaryId">-</span></div>
+    <div><strong>Status:</strong> <span id="summaryStatus">-</span></div>
+    <div><strong>Reserved Amount:</strong> <span id="summaryReserved">-</span></div>
+  </div>
+  <h2>Response</h2>
+  <pre id="output">{}</pre>
+  <script>
+    document.getElementById('run').addEventListener('click', async function () {
+      const payload = {
+        reference: document.getElementById('reference').value.trim(),
+        source_account_number: document.getElementById('sourceAccountNumber').value.trim(),
+        narration: document.getElementById('narration').value.trim(),
+        idempotency_key: document.getElementById('idempotencyKey').value.trim(),
+        amount: Number(document.getElementById('amount').value),
+        beneficiary: { bank_code: document.getElementById('bankCode').value.trim(), account_number: document.getElementById('accountNumber').value.trim() }
+      };
+      const res = await fetch('https://api.tsara.ng/v1/payouts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + document.getElementById('publicKey').value.trim() },
+        body: JSON.stringify(payload)
+      });
+      const text = await res.text();
+      let parsed;
+      try { parsed = JSON.parse(text); document.getElementById('output').textContent = JSON.stringify(parsed, null, 2); } catch (e) { document.getElementById('output').textContent = text; return; }
+      if (parsed && parsed.success && parsed.data) { document.getElementById('summary').style.display='block'; document.getElementById('summaryReference').textContent=parsed.data.reference||'-'; document.getElementById('summaryId').textContent=parsed.data.id||'-'; document.getElementById('summaryStatus').textContent=parsed.data.status||'-'; document.getElementById('summaryReserved').textContent=parsed.data.reserved_amount||'-'; }
+    });
+  </script>
+</body>
+</html>

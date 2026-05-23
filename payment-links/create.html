@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tsara Payment Link Create Example</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 980px; margin: 40px auto; padding: 0 16px; }
+        label { display: block; margin-top: 12px; font-weight: 600; }
+        input, select, button { width: 100%; padding: 10px; margin-top: 6px; box-sizing: border-box; }
+        button { cursor: pointer; }
+        pre { background: #111827; color: #f9fafb; padding: 16px; border-radius: 8px; overflow: auto; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card { border: 1px solid #d1d5db; border-radius: 8px; padding: 16px; margin-top: 16px; background: #f9fafb; }
+        .muted { color: #6b7280; }
+    </style>
+</head>
+
+<body>
+    <h1>Tsara Payment Link Create Example</h1>
+    <p>Create a payment link with <code>POST /v1/payment-links</code>.</p>
+
+    <div class="row">
+        <div>
+            <label>Public Key</label>
+            <input id="public_key" value="pk_live_xxxxx">
+        </div>
+        <div>
+            <label>Slug</label>
+            <input id="slug" value="jan-dues">
+        </div>
+    </div>
+
+    <div class="row">
+        <div>
+            <label>Title</label>
+            <input id="title" value="January dues">
+        </div>
+        <div>
+            <label>Amount (NGN)</label>
+            <input id="amount" type="number" value="5000">
+        </div>
+    </div>
+
+    <div class="row">
+        <div>
+            <label>Type</label>
+            <select id="type">
+                <option value="fixed">fixed</option>
+                <option value="open">open</option>
+            </select>
+        </div>
+        <div>
+            <label>Quantity Limit</label>
+            <input id="quantity_limit" type="number" value="1">
+        </div>
+    </div>
+
+    <label>Description</label>
+    <input id="description" value="Membership dues">
+
+    <button id="createButton">Create Payment Link</button>
+
+    <div id="summary" class="card" style="display:none;">
+        <h2>Payment Link Summary</h2>
+        <div id="summaryContent" class="muted"></div>
+    </div>
+
+    <pre id="output">No request sent yet.</pre>
+
+    <script>
+        function renderSummary(result) {
+            const data = result && result.data ? result.data : null;
+            const card = document.getElementById('summary');
+            const content = document.getElementById('summaryContent');
+            if (!result || result.success !== true || !data) {
+                card.style.display = 'none';
+                content.textContent = '';
+                return;
+            }
+            card.style.display = 'block';
+            content.innerHTML = [
+                'ID: ' + (data.id || '-'),
+                'Title: ' + (data.title || '-'),
+                'Slug: ' + (data.slug || '-'),
+                'Status: ' + (data.status || '-'),
+                'URL: ' + (data.url || '-')
+            ].join('<br>');
+        }
+
+        async function createPaymentLink() {
+            const button = document.getElementById('createButton');
+            const output = document.getElementById('output');
+            button.disabled = true;
+            output.textContent = 'Creating payment link...';
+            renderSummary(null);
+
+            const payload = {
+                currency: 'NGN',
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                amount: Number(document.getElementById('amount').value),
+                slug: document.getElementById('slug').value,
+                type: document.getElementById('type').value,
+                quantity_limit: Number(document.getElementById('quantity_limit').value),
+                fields: ['First Name', 'Last Name', 'Email', 'Phone']
+            };
+
+            try {
+                const response = await fetch('https://api.tsara.ng/v1/payment-links', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + document.getElementById('public_key').value,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                renderSummary(result);
+                output.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                output.textContent = JSON.stringify({ success: false, message: String(error) }, null, 2);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        document.getElementById('createButton').addEventListener('click', createPaymentLink);
+    </script>
+</body>
+
+</html>

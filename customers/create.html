@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tsara Customer Create Example</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 880px; margin: 40px auto; padding: 0 16px; }
+        label { display: block; margin-top: 12px; font-weight: 600; }
+        input, select, button { width: 100%; padding: 10px; margin-top: 6px; box-sizing: border-box; }
+        button { cursor: pointer; }
+        pre { background: #111827; color: #f9fafb; padding: 16px; border-radius: 8px; overflow: auto; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card { border: 1px solid #d1d5db; border-radius: 8px; padding: 16px; margin-top: 16px; background: #f9fafb; }
+        .muted { color: #6b7280; }
+    </style>
+</head>
+
+<body>
+    <h1>Tsara Customer Create Example</h1>
+    <p>Create a customer with <code>POST /v1/customers</code>.</p>
+
+    <div class="row">
+        <div>
+            <label>Public Key</label>
+            <input id="public_key" value="pk_live_xxxxx">
+        </div>
+        <div>
+            <label>Type</label>
+            <select id="type">
+                <option value="individual">individual</option>
+                <option value="business">business</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="row">
+        <div>
+            <label>Name</label>
+            <input id="name" value="John Doe">
+        </div>
+        <div>
+            <label>Email</label>
+            <input id="email" value="user@example.com">
+        </div>
+    </div>
+
+    <button id="createButton">Create Customer</button>
+
+    <div id="summary" class="card" style="display:none;">
+        <h2>Customer Summary</h2>
+        <div id="summaryContent" class="muted"></div>
+    </div>
+
+    <pre id="output">No request sent yet.</pre>
+
+    <script>
+        function renderSummary(result) {
+            const data = result && result.data ? result.data : null;
+            const card = document.getElementById('summary');
+            const content = document.getElementById('summaryContent');
+            if (!result || result.success !== true || !data) {
+                card.style.display = 'none';
+                content.textContent = '';
+                return;
+            }
+            card.style.display = 'block';
+            content.innerHTML = [
+                'ID: ' + (data.id || '-'),
+                'Email: ' + (data.email || '-'),
+                'Name: ' + (data.name || '-'),
+                'Type: ' + (data.type || '-'),
+                'Identity Status: ' + (data.identity_status || '-')
+            ].join('<br>');
+        }
+
+        async function createCustomer() {
+            const button = document.getElementById('createButton');
+            const output = document.getElementById('output');
+            button.disabled = true;
+            output.textContent = 'Creating customer...';
+            renderSummary(null);
+
+            const payload = {
+                email: document.getElementById('email').value,
+                name: document.getElementById('name').value,
+                type: document.getElementById('type').value
+            };
+
+            try {
+                const response = await fetch('https://api.tsara.ng/v1/customers', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + document.getElementById('public_key').value,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                renderSummary(result);
+                output.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                output.textContent = JSON.stringify({ success: false, message: String(error) }, null, 2);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        document.getElementById('createButton').addEventListener('click', createCustomer);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tsara Stablecoin Offramp Example</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 880px; margin: 40px auto; padding: 0 16px; }
+        label { display: block; margin-top: 12px; font-weight: 600; }
+        input, button { width: 100%; padding: 10px; margin-top: 6px; box-sizing: border-box; }
+        button { cursor: pointer; }
+        pre { background: #111827; color: #f9fafb; padding: 16px; border-radius: 8px; overflow: auto; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .card { border: 1px solid #d1d5db; border-radius: 8px; padding: 16px; margin-top: 16px; background: #f9fafb; }
+        .card h2 { margin-top: 0; font-size: 18px; }
+        .muted { color: #6b7280; }
+        .hint { margin-top: 12px; color: #92400e; background: #fffbeb; border: 1px solid #fde68a; padding: 12px; border-radius: 8px; }
+    </style>
+</head>
+
+<body>
+    <h1>Tsara Stablecoin Offramp Example</h1>
+    <p>Create a canonical stablecoin offramp with <code>POST /v1/stablecoin/offramp</code>.</p>
+
+    <div class="row">
+        <div>
+            <label>Public Key</label>
+            <input id="public_key" value="pk_live_xxxxx">
+        </div>
+        <div>
+            <label>Business Reference</label>
+            <input id="reference" value="offramp_001">
+        </div>
+    </div>
+
+    <div class="row">
+        <div>
+            <label>Amount (NGN payout)</label>
+            <input id="amount" type="number" value="2000">
+        </div>
+        <div>
+            <label>Bank Code</label>
+            <input id="bank_code" value="090286">
+        </div>
+    </div>
+
+    <div class="row">
+        <div>
+            <label>Account Number</label>
+            <input id="account_number" value="0110000000">
+        </div>
+        <div>
+            <label>Account Name (optional)</label>
+            <input id="account_name" value="">
+        </div>
+    </div>
+
+    <button id="createButton">Create Offramp</button>
+
+    <div class="hint">
+        Save the returned <code>provider_reference</code>. You need it for <code>stablecoin/offramp-status.html</code> with <code>refresh=1</code>.
+    </div>
+
+    <div id="summary" class="card" style="display:none;">
+        <h2>Offramp Summary</h2>
+        <div id="summaryContent" class="muted"></div>
+    </div>
+
+    <pre id="output">No request sent yet.</pre>
+
+    <script>
+        function renderSummary(result) {
+            const summary = document.getElementById('summary');
+            const content = document.getElementById('summaryContent');
+            const data = result && result.data ? result.data : null;
+            const beneficiary = data && data.beneficiary ? data.beneficiary : null;
+
+            if (!result || result.success !== true || !data) {
+                summary.style.display = 'none';
+                content.textContent = '';
+                return;
+            }
+
+            summary.style.display = 'block';
+            content.innerHTML = [
+                'Reference: ' + (data.reference || '-'),
+                'Provider Reference: ' + (data.provider_reference || '-'),
+                'Status: ' + (data.status || '-'),
+                'Fiat Amount: ' + (data.amount_fiat || '-'),
+                'Stablecoin Amount: ' + (data.amount_stablecoin || '-'),
+                beneficiary ? 'Beneficiary: ' + [beneficiary.bank_name, beneficiary.account_number, beneficiary.account_name].filter(Boolean).join(' / ') : 'Beneficiary: -'
+            ].join('<br>');
+        }
+
+        async function createOfframp() {
+            const button = document.getElementById('createButton');
+            const output = document.getElementById('output');
+
+            button.disabled = true;
+            output.textContent = 'Creating offramp...';
+            renderSummary(null);
+
+            const payload = {
+                reference: document.getElementById('reference').value,
+                fiat_currency: 'NGN',
+                amount: Number(document.getElementById('amount').value),
+                asset: 'USDC',
+                chain: 'SOLANA',
+                bank_code: document.getElementById('bank_code').value,
+                account_number: document.getElementById('account_number').value
+            };
+
+            const accountName = document.getElementById('account_name').value.trim();
+            if (accountName) {
+                payload.account_name = accountName;
+            }
+
+            try {
+                const response = await fetch('https://api.tsara.ng/v1/stablecoin/offramp', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + document.getElementById('public_key').value,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                renderSummary(result);
+                output.textContent = JSON.stringify(result, null, 2);
+            } catch (error) {
+                const result = { success: false, message: String(error) };
+                renderSummary(result);
+                output.textContent = JSON.stringify(result, null, 2);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        document.getElementById('createButton').addEventListener('click', createOfframp);
+    </script>
+</body>
+
+</html>
