@@ -64,7 +64,6 @@ Create direct and crypto-funded bill payment flows.
 
 Folder:
 - `bill/`
-- `payouts/`
 
 Files:
 - `airtime.html` - example `POST /v1/bill/airtime` integration
@@ -85,6 +84,7 @@ Files:
 - `single.html` - example `POST /v1/payouts` integration
 - `bulk.html` - example `POST /v1/payouts/bulk` integration
 - `fetch.html` - example `GET /v1/payouts` and `GET /v1/payouts/bulk` integration
+- `reconcile.html` - example `GET /v1/payouts/reconcile` integration
 
 ### 8. Navigation
 Open `index.html` in the repo root to jump into the examples quickly.
@@ -110,6 +110,7 @@ Canonical routes used in this repo:
 - `POST https://api.tsara.ng/v1/payouts/name-enquiry`
 - `POST https://api.tsara.ng/v1/payouts`
 - `GET https://api.tsara.ng/v1/payouts`
+- `GET https://api.tsara.ng/v1/payouts/reconcile`
 - `POST https://api.tsara.ng/v1/payouts/bulk`
 - `GET https://api.tsara.ng/v1/payouts/bulk`
 - `POST https://api.tsara.ng/v1/bill/crypto`
@@ -345,6 +346,12 @@ curl "https://api.tsara.ng/v1/payouts?reference=payout_001" \
   -H "Authorization: Bearer pk_live_xxxxx"
 ```
 
+### Reconcile payout
+```sh
+curl "https://api.tsara.ng/v1/payouts/reconcile?type=single&reference=payout_001&refresh=1" \
+  -H "Authorization: Bearer pk_live_xxxxx"
+```
+
 ### Crypto-funded bill
 ```sh
 curl -X POST https://api.tsara.ng/v1/bill/crypto \
@@ -404,7 +411,7 @@ curl -X POST https://api.tsara.ng/v1/bill/crypto/retry \
    - `payment-links/`
    - `stablecoin/`
    - `bill/`
-- `payouts/`
+   - `payouts/`
 
 4. Implement your actual order update logic inside `checkout/webhook.php`.
 
@@ -414,6 +421,7 @@ curl -X POST https://api.tsara.ng/v1/bill/crypto/retry \
 - Stablecoin status refresh examples use `provider_reference` plus `refresh=1`.
 - Bill crypto examples use fetch, reconcile, and retry as separate support operations.
 - Payout examples are asynchronous by design; create returns a local pending state, not final settlement.
+- Use the payout reconcile example when you need the latest provider-backed state for in-flight items.
 - The create examples call out which identifiers to save for the follow-up status/support pages.
 - Replace the placeholder public key before testing any route.
 

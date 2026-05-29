@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reconcile Payout</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 820px; margin: 40px auto; padding: 0 16px; color: #111827; }
+    .card { border: 1px solid #d1d5db; border-radius: 12px; padding: 20px; background: #f9fafb; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    label { display: block; font-weight: 700; margin: 12px 0 6px; }
+    input, select, button, pre { width: 100%; }
+    input, select, button { padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font: inherit; }
+    button { background: #14532d; color: #fff; border: none; cursor: pointer; margin-top: 14px; }
+    .summary { margin: 18px 0; padding: 16px; border: 1px solid #d1d5db; border-radius: 12px; background: #fff; display: none; }
+    .summary div { margin: 6px 0; }
+    pre { background: #0f172a; color: #e2e8f0; padding: 16px; border-radius: 10px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>Reconcile Payout</h1>
+  <div class="card">
+    <div class="grid">
+      <div><label>Public Key</label><input id="publicKey" type="text" placeholder="pk_live_xxxxx"></div>
+      <div>
+        <label>Type</label>
+        <select id="type">
+          <option value="single">Single</option>
+          <option value="bulk">Bulk</option>
+        </select>
+      </div>
+      <div><label>Reference</label><input id="reference" type="text" value="payout_001"></div>
+      <div><label>Provider Session ID</label><input id="providerSessionId" type="text" placeholder="Optional provider session id"></div>
+      <div><label>Provider Reference</label><input id="providerReference" type="text" placeholder="Optional provider reference"></div>
+      <div><label>Refresh</label><select id="refresh"><option value="1">Yes</option><option value="0">No</option></select></div>
+    </div>
+    <button id="run">Reconcile Payout</button>
+  </div>
+  <div id="summary" class="summary">
+    <div><strong>Reference:</strong> <span id="summaryReference">-</span></div>
+    <div><strong>Status:</strong> <span id="summaryStatus">-</span></div>
+    <div><strong>Success Count:</strong> <span id="summarySuccess">-</span></div>
+    <div><strong>Failed Count:</strong> <span id="summaryFailed">-</span></div>
+  </div>
+  <h2>Response</h2>
+  <pre id="output">{}</pre>
+  <script>
+    document.getElementById('run').addEventListener('click', async function () {
+      const params = new URLSearchParams();
+      params.set('type', document.getElementById('type').value);
+      if (document.getElementById('reference').value.trim()) params.set('reference', document.getElementById('reference').value.trim());
+      if (document.getElementById('providerSessionId').value.trim()) params.set('provider_session_id', document.getElementById('providerSessionId').value.trim());
+      if (document.getElementById('providerReference').value.trim()) params.set('provider_reference', document.getElementById('providerReference').value.trim());
+      params.set('refresh', document.getElementById('refresh').value);
+      const res = await fetch('https://api.tsara.ng/v1/payouts/reconcile?' + params.toString(), {
+        headers: { 'Authorization': 'Bearer ' + document.getElementById('publicKey').value.trim() }
+      });
+      const text = await res.text();
+      let parsed;
+      try { parsed = JSON.parse(text); document.getElementById('output').textContent = JSON.stringify(parsed, null, 2); }
+      catch (e) { document.getElementById('output').textContent = text; return; }
+      if (parsed && parsed.success && parsed.data && parsed.data.summary) {
+        document.getElementById('summary').style.display = 'block';
+        document.getElementById('summaryReference').textContent = parsed.data.summary.reference || '-';
+        document.getElementById('summaryStatus').textContent = parsed.data.summary.status || '-';
+        document.getElementById('summarySuccess').textContent = parsed.data.summary.success_count || '0';
+        document.getElementById('summaryFailed').textContent = parsed.data.summary.failed_count || '0';
+      }
+    });
+  </script>
+</body>
+</html>
