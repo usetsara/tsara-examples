@@ -87,6 +87,10 @@
                 <li><a href="payouts/bulk.html">Create bulk payout</a></li>
                 <li><a href="payouts/fetch.html">Fetch payout</a></li>
                 <li><a href="payouts/reconcile.html">Reconcile payout</a></li>
+                <li><a href="payouts/webhook-resend.html">Resend payout webhook</a></li>
+                <li><a href="payouts/webhook-attempts.html">List payout webhook attempts</a></li>
+                <li><a href="payouts/webhook-logs.html">List payout webhook logs</a></li>
+                <li><a href="payouts/webhook.php">Payout webhook handler (PHP)</a></li>
             </ul>
         </div>
     </div>
@@ -97,6 +101,7 @@
         <li>Stablecoin status refresh examples use <code>provider_reference</code> plus <code>refresh=1</code>.</li>
         <li>Bill crypto support flow uses fetch, reconcile, and retry as separate support operations.</li>
         <li>Payout flows are asynchronous; create returns a local pending state and later reads show processing or final status.</li>
+        <li>Payout webhooks use the same <code>X_TSARA_SIGNATURE</code> signature header as checkout webhooks.</li>
     </ul>
 </body>
 

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>List Payout Webhook Attempts</title>
+  <style>body{font-family:Arial,sans-serif;max-width:860px;margin:40px auto;padding:0 16px;color:#111827}.card{border:1px solid #d1d5db;border-radius:12px;padding:20px;background:#f9fafb}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}label{display:block;font-weight:700;margin:12px 0 6px}input,select,button,pre{width:100%}input,select,button{padding:10px 12px;border-radius:8px;border:1px solid #cbd5e1;font:inherit}button{background:#14532d;color:#fff;border:none;cursor:pointer;margin-top:14px}pre{background:#0f172a;color:#e2e8f0;padding:16px;border-radius:10px;overflow:auto}</style>
+</head>
+<body>
+  <h1>List Payout Webhook Attempts</h1>
+  <div class="card">
+    <div class="grid">
+      <div><label>Public Key</label><input id="publicKey" type="text" placeholder="pk_live_xxxxx"></div>
+      <div><label>Payout Reference</label><input id="reference" type="text" value="payout_001"></div>
+      <div><label>Item Reference</label><input id="itemReference" type="text" placeholder="payout_001_item_1"></div>
+      <div><label>Event</label><select id="event"><option value="">Any</option><option value="payout.item.processing">payout.item.processing</option><option value="payout.item.successful">payout.item.successful</option><option value="payout.item.failed">payout.item.failed</option><option value="payout.batch.completed">payout.batch.completed</option></select></div>
+      <div><label>Delivery Status</label><select id="deliveryStatus"><option value="">Any</option><option value="sent">sent</option><option value="failed">failed</option></select></div>
+      <div><label>Attempt Type</label><select id="attemptType"><option value="">Any</option><option value="auto">auto</option><option value="resend">resend</option></select></div>
+    </div>
+    <button id="run">Fetch Attempts</button>
+  </div>
+  <h2>Response</h2>
+  <pre id="output">{}</pre>
+  <script>
+    document.getElementById('run').addEventListener('click', async function () {
+      const params = new URLSearchParams();
+      if (document.getElementById('reference').value.trim()) params.set('reference', document.getElementById('reference').value.trim());
+      if (document.getElementById('itemReference').value.trim()) params.set('item_reference', document.getElementById('itemReference').value.trim());
+      if (document.getElementById('event').value) params.set('event', document.getElementById('event').value);
+      if (document.getElementById('deliveryStatus').value) params.set('delivery_status', document.getElementById('deliveryStatus').value);
+      if (document.getElementById('attemptType').value) params.set('attempt_type', document.getElementById('attemptType').value);
+      const res = await fetch('https://api.tsara.ng/v1/webhook/payout/attempts?' + params.toString(), {
+        headers: { 'Authorization': 'Bearer ' + document.getElementById('publicKey').value.trim() }
+      });
+      const text = await res.text();
+      try { document.getElementById('output').textContent = JSON.stringify(JSON.parse(text), null, 2); }
+      catch (e) { document.getElementById('output').textContent = text; }
+    });
+  </script>
+</body>
+</html>

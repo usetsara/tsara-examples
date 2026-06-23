@@ -85,6 +85,10 @@ Files:
 - `bulk.html` - example `POST /v1/payouts/bulk` integration
 - `fetch.html` - example `GET /v1/payouts` and `GET /v1/payouts/bulk` integration
 - `reconcile.html` - example `GET /v1/payouts/reconcile` integration
+- `webhook.php` - example payout webhook handler with signature verification
+- `webhook-resend.html` - example `POST /v1/webhook/payout/resend` integration
+- `webhook-attempts.html` - example `GET /v1/webhook/payout/attempts` integration
+- `webhook-logs.html` - example `GET /v1/webhook/payout/logs` integration
 
 ### 8. Navigation
 Open `index.html` in the repo root to jump into the examples quickly.
@@ -113,6 +117,9 @@ Canonical routes used in this repo:
 - `GET https://api.tsara.ng/v1/payouts/reconcile`
 - `POST https://api.tsara.ng/v1/payouts/bulk`
 - `GET https://api.tsara.ng/v1/payouts/bulk`
+- `POST https://api.tsara.ng/v1/webhook/payout/resend`
+- `GET https://api.tsara.ng/v1/webhook/payout/logs`
+- `GET https://api.tsara.ng/v1/webhook/payout/attempts`
 - `POST https://api.tsara.ng/v1/bill/crypto`
 - `GET https://api.tsara.ng/v1/bill/crypto`
 - `GET https://api.tsara.ng/v1/bill/crypto/reconcile`
@@ -351,6 +358,40 @@ curl "https://api.tsara.ng/v1/payouts?reference=payout_001" \
 curl "https://api.tsara.ng/v1/payouts/reconcile?type=single&reference=payout_001&refresh=1" \
   -H "Authorization: Bearer pk_live_xxxxx"
 ```
+
+### Resend payout webhook
+```sh
+curl -X POST https://api.tsara.ng/v1/webhook/payout/resend \
+  -H "Authorization: Bearer pk_live_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reference": "payout_001",
+    "item_reference": "payout_001_item_1"
+  }'
+```
+
+### List payout webhook attempts
+```sh
+curl "https://api.tsara.ng/v1/webhook/payout/attempts?reference=payout_001" \
+  -H "Authorization: Bearer pk_live_xxxxx"
+```
+
+### List payout webhook logs
+```sh
+curl "https://api.tsara.ng/v1/webhook/payout/logs?reference=payout_001&limit=20" \
+  -H "Authorization: Bearer pk_live_xxxxx"
+```
+
+### Payout webhook payloads
+Payout item events:
+- `payout.item.processing`
+- `payout.item.successful`
+- `payout.item.failed`
+
+Payout batch completion event:
+- `payout.batch.completed`
+
+All payout webhooks are signed with `X_TSARA_SIGNATURE` using your business webhook secret.
 
 ### Crypto-funded bill
 ```sh
