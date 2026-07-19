@@ -18,7 +18,7 @@
                         <h1 class="h3 mb-3">Tsara Inline Checkout</h1>
                         <p class="text-muted mb-4">
                             This example opens Tsara checkout with the inline script. Replace the placeholder values with your real public key,
-                            customer data, and redirect URL.
+                            customer data, and redirect URLs for success, cancel, and timeout handling.
                         </p>
 
                         <div class="mb-4">
@@ -31,7 +31,10 @@
   "email": "customer@example.com",
   "phone": "08012345678",
   "name": "Test Client",
-  "redirect_url": "https://yourwebsite.com/checkout/return"
+  "redirect_url": "https://yourwebsite.com/checkout/return",
+  "success_url": "https://yourwebsite.com/checkout/success",
+  "cancel_url": "https://yourwebsite.com/checkout/cancelled",
+  "timeout_url": "https://yourwebsite.com/checkout/expired"
 }</code></pre>
                         </div>
 
@@ -75,6 +78,9 @@
                     name: data.name
                 },
                 redirect_url: data.redirect_url,
+                success_url: data.success_url,
+                cancel_url: data.cancel_url,
+                timeout_url: data.timeout_url,
                 customizations: {
                     title: 'Business Name',
                     description: 'Fund Wallet',
@@ -109,7 +115,10 @@
                 phone: '08012345678',
                 name: 'Test Client',
                 user_id: '123456',
-                redirect_url: 'https://yourwebsite.com/checkout/return'
+                redirect_url: 'https://yourwebsite.com/checkout/return',
+                success_url: 'https://yourwebsite.com/checkout/success',
+                cancel_url: 'https://yourwebsite.com/checkout/cancelled',
+                timeout_url: 'https://yourwebsite.com/checkout/expired'
             });
 
             try {

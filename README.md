@@ -47,7 +47,7 @@ Files:
 - `transactions.html` - example `GET /v1/payment-links/transactions` integration
 
 ### 5. Stablecoin Onramp and Offramp
-Create canonical OnSwitch-backed stablecoin payment flows.
+Create stablecoin payment flows for fiat-to-crypto and crypto-to-fiat transactions.
 
 Folder:
 - `stablecoin/`
@@ -90,7 +90,23 @@ Files:
 - `webhook-attempts.html` - example `GET /v1/webhook/payout/attempts` integration
 - `webhook-logs.html` - example `GET /v1/webhook/payout/logs` integration
 
-### 8. Navigation
+### 8. Refunds
+Manual refund creation, operator flow, and webhook support.
+
+Folder:
+- `refunds/`
+
+Files:
+- `create.html` - example `POST /v1/refunds` integration
+- `fetch.html` - example `GET /v1/refunds` integration
+- `process.html` - example `POST /v1/refunds/process` integration
+- `finalize.html` - example `POST /v1/refunds/finalize` integration
+- `webhook.php` - example refund webhook handler with signature verification
+- `webhook-resend.html` - example `POST /v1/webhooks/refund-resend` integration
+- `webhook-attempts.html` - example `GET /v1/webhooks/refund-attempts` integration
+- `webhook-logs.html` - example `GET /v1/webhooks/refund-logs` integration
+
+### 9. Navigation
 Open `index.html` in the repo root to jump into the examples quickly.
 
 ## Current API direction
@@ -120,6 +136,13 @@ Canonical routes used in this repo:
 - `POST https://api.tsara.ng/v1/webhook/payout/resend`
 - `GET https://api.tsara.ng/v1/webhook/payout/logs`
 - `GET https://api.tsara.ng/v1/webhook/payout/attempts`
+- `POST https://api.tsara.ng/v1/refunds`
+- `GET https://api.tsara.ng/v1/refunds`
+- `POST https://api.tsara.ng/v1/refunds/process`
+- `POST https://api.tsara.ng/v1/refunds/finalize`
+- `POST https://api.tsara.ng/v1/webhooks/refund-resend`
+- `GET https://api.tsara.ng/v1/webhooks/refund-logs`
+- `GET https://api.tsara.ng/v1/webhooks/refund-attempts`
 - `POST https://api.tsara.ng/v1/bill/crypto`
 - `GET https://api.tsara.ng/v1/bill/crypto`
 - `GET https://api.tsara.ng/v1/bill/crypto/reconcile`
@@ -133,7 +156,7 @@ Do not use old create-link shapes such as:
 ### Create customer
 ```sh
 curl -X POST https://api.tsara.ng/v1/customers \
-  -H "Authorization: Bearer pk_live_xxxxx" \
+  -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "email": "user@example.com",
@@ -145,13 +168,13 @@ curl -X POST https://api.tsara.ng/v1/customers \
 ### List customers
 ```sh
 curl "https://api.tsara.ng/v1/customers?search=john&type=individual&page=1&limit=10" \
-  -H "Authorization: Bearer pk_live_xxxxx"
+  -H "Authorization: Bearer sk_live_xxxxx"
 ```
 
 ### Update customer
 ```sh
 curl -X POST https://api.tsara.ng/v1/customers/update \
-  -H "Authorization: Bearer pk_live_xxxxx" \
+  -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "customer_id": "id_1234567890",
@@ -164,7 +187,7 @@ curl -X POST https://api.tsara.ng/v1/customers/update \
 ### Create payment link
 ```sh
 curl -X POST https://api.tsara.ng/v1/payment-links \
-  -H "Authorization: Bearer pk_live_xxxxx" \
+  -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "currency": "NGN",
@@ -181,13 +204,13 @@ curl -X POST https://api.tsara.ng/v1/payment-links \
 ### List payment links
 ```sh
 curl "https://api.tsara.ng/v1/payment-links?status=active&page=1&limit=10" \
-  -H "Authorization: Bearer pk_live_xxxxx"
+  -H "Authorization: Bearer sk_live_xxxxx"
 ```
 
 ### Update payment-link status
 ```sh
 curl -X POST https://api.tsara.ng/v1/payment-links/status \
-  -H "Authorization: Bearer pk_live_xxxxx" \
+  -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "uid": "plink_123",
@@ -198,13 +221,13 @@ curl -X POST https://api.tsara.ng/v1/payment-links/status \
 ### List payment-link transactions
 ```sh
 curl "https://api.tsara.ng/v1/payment-links/transactions?uid=plink_1234567890&status=success&page=1&limit=10" \
-  -H "Authorization: Bearer pk_live_xxxxx"
+  -H "Authorization: Bearer sk_live_xxxxx"
 ```
 
 ### Checkout link
 ```sh
-curl -X POST https://api.tsara.ng/v1/checkout \
-  -H "Authorization: Bearer pk_live_xxxxx" \
+curl -X POST https://api.tsara.ng/v1/checkout/create \
+  -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "trx_id": "ORDER-1234567890",
@@ -214,14 +237,22 @@ curl -X POST https://api.tsara.ng/v1/checkout \
     "amount": 1000,
     "amount_type": "fiat",
     "currency": "NGN",
-    "redirect_url": "https://yourwebsite.com/checkout/return"
+    "redirect_url": "https://yourwebsite.com/checkout/return",
+    "success_url": "https://yourwebsite.com/checkout/success",
+    "cancel_url": "https://yourwebsite.com/checkout/cancelled",
+    "timeout_url": "https://yourwebsite.com/checkout/expired"
   }'
+```
+
+Tsara appends `trx_id`, `reference`, and `status` to the final redirect URL. When the override URLs are not supplied, checkout falls back to `redirect_url`.
+
+```sh
 ```
 
 ### Stablecoin onramp
 ```sh
 curl -X POST https://api.tsara.ng/v1/stablecoin/onramp \
-  -H "Authorization: Bearer pk_live_xxxxx" \
+  -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "reference": "onramp_001",
@@ -235,7 +266,7 @@ curl -X POST https://api.tsara.ng/v1/stablecoin/onramp \
 ### Stablecoin offramp
 ```sh
 curl -X POST https://api.tsara.ng/v1/stablecoin/offramp \
-  -H "Authorization: Bearer pk_live_xxxxx" \
+  -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "reference": "offramp_001",
@@ -251,7 +282,7 @@ curl -X POST https://api.tsara.ng/v1/stablecoin/offramp \
 ### Stablecoin offramp quote
 ```sh
 curl -X POST https://api.tsara.ng/v1/stablecoin/offramp/quote \
-  -H "Authorization: Bearer pk_live_xxxxx" \
+  -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "reference": "offramp-quote-001",
@@ -267,7 +298,7 @@ curl -X POST https://api.tsara.ng/v1/stablecoin/offramp/quote \
 ### Airtime bill
 ```sh
 curl -X POST https://api.tsara.ng/v1/bill/airtime \
-  -H "Authorization: Bearer pk_live_xxxxx" \
+  -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "provider": "MTN",
@@ -280,7 +311,7 @@ curl -X POST https://api.tsara.ng/v1/bill/airtime \
 ### Electricity bill
 ```sh
 curl -X POST https://api.tsara.ng/v1/bill/electricity \
-  -H "Authorization: Bearer pk_live_xxxxx" \
+  -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "provider": "IKEDC",
@@ -294,7 +325,7 @@ curl -X POST https://api.tsara.ng/v1/bill/electricity \
 ### Payout name enquiry
 ```sh
 curl -X POST https://api.tsara.ng/v1/payouts/name-enquiry \
-  -H "Authorization: Bearer pk_live_xxxxx" \
+  -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "bank_code": "090286",
@@ -305,7 +336,7 @@ curl -X POST https://api.tsara.ng/v1/payouts/name-enquiry \
 ### Single payout
 ```sh
 curl -X POST https://api.tsara.ng/v1/payouts \
-  -H "Authorization: Bearer pk_live_xxxxx" \
+  -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "reference": "payout_001",
@@ -323,7 +354,7 @@ curl -X POST https://api.tsara.ng/v1/payouts \
 ### Bulk payout
 ```sh
 curl -X POST https://api.tsara.ng/v1/payouts/bulk \
-  -H "Authorization: Bearer pk_live_xxxxx" \
+  -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "reference": "bulk_payout_001",
@@ -350,19 +381,19 @@ curl -X POST https://api.tsara.ng/v1/payouts/bulk \
 ### Fetch payout
 ```sh
 curl "https://api.tsara.ng/v1/payouts?reference=payout_001" \
-  -H "Authorization: Bearer pk_live_xxxxx"
+  -H "Authorization: Bearer sk_live_xxxxx"
 ```
 
 ### Reconcile payout
 ```sh
 curl "https://api.tsara.ng/v1/payouts/reconcile?type=single&reference=payout_001&refresh=1" \
-  -H "Authorization: Bearer pk_live_xxxxx"
+  -H "Authorization: Bearer sk_live_xxxxx"
 ```
 
 ### Resend payout webhook
 ```sh
 curl -X POST https://api.tsara.ng/v1/webhook/payout/resend \
-  -H "Authorization: Bearer pk_live_xxxxx" \
+  -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "reference": "payout_001",
@@ -373,13 +404,13 @@ curl -X POST https://api.tsara.ng/v1/webhook/payout/resend \
 ### List payout webhook attempts
 ```sh
 curl "https://api.tsara.ng/v1/webhook/payout/attempts?reference=payout_001" \
-  -H "Authorization: Bearer pk_live_xxxxx"
+  -H "Authorization: Bearer sk_live_xxxxx"
 ```
 
 ### List payout webhook logs
 ```sh
 curl "https://api.tsara.ng/v1/webhook/payout/logs?reference=payout_001&limit=20" \
-  -H "Authorization: Bearer pk_live_xxxxx"
+  -H "Authorization: Bearer sk_live_xxxxx"
 ```
 
 ### Payout webhook payloads
@@ -393,10 +424,70 @@ Payout batch completion event:
 
 All payout webhooks are signed with `X_TSARA_SIGNATURE` using your business webhook secret.
 
+### Create refund
+```sh
+curl -X POST https://api.tsara.ng/v1/refunds   -H "Authorization: Bearer sk_live_xxxxx"   -H "Content-Type: application/json"   -d '{
+    "transaction_reference": "ts-88355107",
+    "amount": 200,
+    "reference": "rf_order_001",
+    "reason": "Customer requested a partial refund"
+  }'
+```
+
+### Fetch refund
+```sh
+curl "https://api.tsara.ng/v1/refunds?reference=rf_order_001"   -H "Authorization: Bearer sk_live_xxxxx"
+```
+
+### Move refund to processing
+```sh
+curl -X POST https://api.tsara.ng/v1/refunds/process   -H "Authorization: Bearer sk_live_xxxxx"   -H "Content-Type: application/json"   -d '{
+    "reference": "rf_order_001",
+    "note": "Operations team has started processing this refund"
+  }'
+```
+
+### Finalize refund
+```sh
+curl -X POST https://api.tsara.ng/v1/refunds/finalize   -H "Authorization: Bearer sk_live_xxxxx"   -H "Content-Type: application/json"   -d '{
+    "reference": "rf_order_001",
+    "status": "successful",
+    "provider_reference": "rf_provider_001",
+    "provider_response": "{\"message\":\"Refund completed\"}",
+    "note": "Refund completed manually"
+  }'
+```
+
+### Resend refund webhook
+```sh
+curl -X POST https://api.tsara.ng/v1/webhooks/refund-resend   -H "Authorization: Bearer sk_live_xxxxx"   -H "Content-Type: application/json"   -d '{
+    "reference": "rf_order_001"
+  }'
+```
+
+### List refund webhook attempts
+```sh
+curl "https://api.tsara.ng/v1/webhooks/refund-attempts?reference=rf_order_001"   -H "Authorization: Bearer sk_live_xxxxx"
+```
+
+### List refund webhook logs
+```sh
+curl "https://api.tsara.ng/v1/webhooks/refund-logs?reference=rf_order_001&limit=20"   -H "Authorization: Bearer sk_live_xxxxx"
+```
+
+### Refund webhook payloads
+Refund events:
+- `refund.pending`
+- `refund.processing`
+- `refund.successful`
+- `refund.failed`
+
+All refund webhooks are signed with `X_TSARA_SIGNATURE` using your business webhook secret.
+
 ### Crypto-funded bill
 ```sh
 curl -X POST https://api.tsara.ng/v1/bill/crypto \
-  -H "Authorization: Bearer pk_live_xxxxx" \
+  -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "service": "AIRTIME",
@@ -411,19 +502,19 @@ curl -X POST https://api.tsara.ng/v1/bill/crypto \
 ### Fetch crypto-funded bill
 ```sh
 curl "https://api.tsara.ng/v1/bill/crypto?trx_id=ts-1234567890" \
-  -H "Authorization: Bearer pk_live_xxxxx"
+  -H "Authorization: Bearer sk_live_xxxxx"
 ```
 
 ### Reconcile crypto-funded bill
 ```sh
 curl "https://api.tsara.ng/v1/bill/crypto/reconcile?provider_reference=provider-guid-here" \
-  -H "Authorization: Bearer pk_live_xxxxx"
+  -H "Authorization: Bearer sk_live_xxxxx"
 ```
 
 ### Retry crypto-funded bill
 ```sh
 curl -X POST https://api.tsara.ng/v1/bill/crypto/retry \
-  -H "Authorization: Bearer pk_live_xxxxx" \
+  -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
     "trx_id": "ts-1234567890"
@@ -439,7 +530,7 @@ curl -X POST https://api.tsara.ng/v1/bill/crypto/retry \
    ```
 
 2. Replace placeholder values such as:
-   - `pk_live_xxxxx`
+   - `sk_live_xxxxx`
    - redirect URLs
    - `sk_webhook_xxxxx`
    - provider references
@@ -453,6 +544,7 @@ curl -X POST https://api.tsara.ng/v1/bill/crypto/retry \
    - `stablecoin/`
    - `bill/`
    - `payouts/`
+   - `refunds/`
 
 4. Implement your actual order update logic inside `checkout/webhook.php`.
 
@@ -464,11 +556,11 @@ curl -X POST https://api.tsara.ng/v1/bill/crypto/retry \
 - Payout examples are asynchronous by design; create returns a local pending state, not final settlement.
 - Use the payout reconcile example when you need the latest provider-backed state for in-flight items.
 - The create examples call out which identifiers to save for the follow-up status/support pages.
-- Replace the placeholder public key before testing any route.
+- Replace the placeholder secret key before testing any route.
 
 ## Webhook notes
 
-- Tsara sends the raw request body and `X-Tsara-Signature` header.
+- Tsara sends the raw request body and `X_TSARA_SIGNATURE` header.
 - Verify the signature before you trust the payload.
 - Return `200 OK` quickly after processing the event.
 - Use your own transaction reference lookup before marking an order as paid.

@@ -55,7 +55,7 @@
 
         <div class="card">
             <h2>Stablecoin</h2>
-            <p>Canonical OnSwitch-backed payment rails.</p>
+            <p>Stablecoin payment rails for onramp and offramp flows.</p>
             <ul>
                 <li><a href="stablecoin/onramp.html">Create onramp</a></li>
                 <li><a href="stablecoin/onramp-status.html">Refresh onramp status</a></li>
@@ -93,6 +93,22 @@
                 <li><a href="payouts/webhook.php">Payout webhook handler (PHP)</a></li>
             </ul>
         </div>
+
+
+        <div class="card">
+            <h2>Refunds</h2>
+            <p>Manual refund creation, operator flow, and webhook support.</p>
+            <ul>
+                <li><a href="refunds/create.html">Create refund</a></li>
+                <li><a href="refunds/fetch.html">Fetch refund</a></li>
+                <li><a href="refunds/process.html">Process refund</a></li>
+                <li><a href="refunds/finalize.html">Finalize refund</a></li>
+                <li><a href="refunds/webhook-resend.html">Resend refund webhook</a></li>
+                <li><a href="refunds/webhook-attempts.html">List refund webhook attempts</a></li>
+                <li><a href="refunds/webhook-logs.html">List refund webhook logs</a></li>
+                <li><a href="refunds/webhook.php">Refund webhook handler (PHP)</a></li>
+            </ul>
+        </div>
     </div>
 
     <h2 style="margin-top: 32px;">Notes</h2>
@@ -101,7 +117,7 @@
         <li>Stablecoin status refresh examples use <code>provider_reference</code> plus <code>refresh=1</code>.</li>
         <li>Bill crypto support flow uses fetch, reconcile, and retry as separate support operations.</li>
         <li>Payout flows are asynchronous; create returns a local pending state and later reads show processing or final status.</li>
-        <li>Payout webhooks use the same <code>X_TSARA_SIGNATURE</code> signature header as checkout webhooks.</li>
+        <li>Payout and refund webhooks use the same <code>X_TSARA_SIGNATURE</code> signature header as checkout webhooks.</li>
     </ul>
 </body>
 
