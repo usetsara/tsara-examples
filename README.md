@@ -112,7 +112,7 @@ Open `index.html` in the repo root to jump into the examples quickly.
 ## Current API direction
 
 Canonical routes used in this repo:
-- `POST https://api.tsara.ng/v1/checkout`
+- `POST https://api.tsara.ng/v1/checkout/create`
 - `POST https://api.tsara.ng/v1/customers`
 - `GET https://api.tsara.ng/v1/customers`
 - `POST https://api.tsara.ng/v1/customers/update`

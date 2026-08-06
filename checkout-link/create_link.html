@@ -43,7 +43,7 @@
             };
 
             try {
-                const response = await fetch('https://api.tsara.ng/v1/checkout', requestOptions);
+                const response = await fetch('https://api.tsara.ng/v1/checkout/create', requestOptions);
                 const result = await response.json();
                 const data = result.data || {};
                 const fiat = (data.account && data.account.fiat) || {};
