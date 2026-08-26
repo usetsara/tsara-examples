@@ -224,12 +224,13 @@ curl "https://api.tsara.ng/v1/payment-links/transactions?uid=plink_1234567890&st
   -H "Authorization: Bearer sk_live_xxxxx"
 ```
 
-### Checkout link
+### Checkout
 ```sh
 curl -X POST https://api.tsara.ng/v1/checkout/create \
   -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
+    "public_key": "pk_live_xxxxx",
     "trx_id": "ORDER-1234567890",
     "email": "customer@example.com",
     "name": "Test Client",
@@ -245,6 +246,35 @@ curl -X POST https://api.tsara.ng/v1/checkout/create \
 ```
 
 Tsara appends `trx_id`, `reference`, and `status` to the final redirect URL. When the override URLs are not supplied, checkout falls back to `redirect_url`.
+
+#### Duplicate checkout protection
+
+Every submitted `trx_id` must be unique. Tsara may reuse a matching pending checkout created within the previous three minutes when rapid requests have the same business, customer, amount, currency, amount type, asset, and environment.
+
+When `reused` is `true`:
+- no additional transaction or payment account was created
+- `trx_id` and `data.id` are the original transaction ID
+- `requested_trx_id` is the newer ID submitted in the duplicate request
+- continue with the returned `trx_id`, checkout URL, and payment instructions
+- status checks and webhook events use the returned original `trx_id`
+
+```json
+{
+  "success": true,
+  "status_code": 200,
+  "message": "Existing checkout reused",
+  "data": {
+    "id": "ORDER-1234567890",
+    "status": "pending",
+    "checkout_url": "https://checkout.tsara.ng/?trx_id=ORDER-1234567890",
+    "reused": true,
+    "requested_trx_id": "ORDER-1234567891"
+  },
+  "trx_id": "ORDER-1234567890",
+  "requested_trx_id": "ORDER-1234567891",
+  "reused": true
+}
+```
 
 ```sh
 ```

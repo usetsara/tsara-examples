@@ -19,9 +19,10 @@
 
     <script>
         async function createCheckoutLink() {
+            const requestedTrxId = `TEST-${Date.now()}`;
             const body = new URLSearchParams({
                 public_key: 'pk_live_xxxxx',
-                trx_id: 'TEST-1234567893',
+                trx_id: requestedTrxId,
                 email: 'johndoe@gmail.com',
                 name: 'John Doe',
                 phone: '08012345678',
@@ -49,12 +50,16 @@
                 const fiat = (data.account && data.account.fiat) || {};
                 const checkoutUrl = data.checkout_url || result.url || null;
                 const trxId = data.id || result.trx_id || 'N/A';
+                const reused = Boolean(data.reused || result.reused);
+                const submittedTrxId = data.requested_trx_id || result.requested_trx_id || requestedTrxId;
 
                 if (result.success && checkoutUrl) {
                     document.getElementById('response').innerHTML = `
                         <div class="alert alert-success">
+                            ${reused ? `<p><strong>Existing pending checkout reused.</strong> Continue with the returned transaction ID.</p>` : ''}
                             <p><strong>Checkout Link:</strong> <a href="${checkoutUrl}" target="_blank" rel="noopener noreferrer">${checkoutUrl}</a></p>
-                            <p><strong>Transaction ID:</strong> ${trxId}</p>
+                            <p><strong>Returned Transaction ID:</strong> ${trxId}</p>
+                            ${reused ? `<p><strong>Submitted Transaction ID:</strong> ${submittedTrxId}</p>` : ''}
                             <p><strong>Account Details:</strong></p>
                             <ul>
                                 <li><strong>Account Number:</strong> ${fiat.account_number || 'N/A'}</li>

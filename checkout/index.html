@@ -21,6 +21,11 @@
                             customer data, and redirect URLs for success, cancel, and timeout handling.
                         </p>
 
+                        <div class="alert alert-info small">
+                            Tsara may reuse a matching pending checkout submitted within three minutes. Always continue with the
+                            <code>trx_id</code> and checkout URL returned by the API or SDK.
+                        </div>
+
                         <div class="mb-4">
                             <h2 class="h6">Sample payload</h2>
                             <pre class="bg-dark text-light p-3 rounded small mb-0"><code>{
