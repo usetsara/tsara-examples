@@ -79,6 +79,13 @@
         </div>
 
         <div class="card">
+            <h2>Fiat Transfers</h2>
+            <p>Create and reconcile business-owned fiat transfers.</p>
+            <ul>
+                <li><a href="fiat/transfers.html">Fiat transfer API</a></li>
+            </ul>
+        </div>
+        <div class="card">
             <h2>Payouts</h2>
             <p>Scheduler-backed single and bulk payouts from a business account.</p>
             <ul>
@@ -116,6 +123,7 @@
         <li>Replace placeholder keys and references before testing.</li>
         <li>Stablecoin status refresh examples use <code>provider_reference</code> plus <code>refresh=1</code>.</li>
         <li>Bill crypto support flow uses fetch, reconcile, and retry as separate support operations.</li>
+        <li>Fiat transfer requests require a secret key and an idempotency key; retries must reuse the original payload.</li>
         <li>Payout flows are asynchronous; create returns a local pending state and later reads show processing or final status.</li>
         <li>Payout and refund webhooks use the same <code>X_TSARA_SIGNATURE</code> signature header as checkout webhooks.</li>
     </ul>

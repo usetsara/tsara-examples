@@ -73,7 +73,16 @@ Files:
 - `crypto-reconcile.html` - example `GET /v1/bill/crypto/reconcile` integration
 - `crypto-retry.html` - example `POST /v1/bill/crypto/retry` integration
 
-### 7. Payouts
+### 7. Fiat Transfers
+Create, list, and reconcile business-owned fiat transfers.
+
+Folder:
+- `fiat/`
+
+Files:
+- `transfers.html` - examples for `POST /v1/fiat/transfers`, transfer status, name enquiry, and bank listing
+
+### 8. Payouts
 Single and bulk payouts from a business account.
 
 Folder:
@@ -90,7 +99,7 @@ Files:
 - `webhook-attempts.html` - example `GET /v1/webhook/payout/attempts` integration
 - `webhook-logs.html` - example `GET /v1/webhook/payout/logs` integration
 
-### 8. Refunds
+### 9. Refunds
 Manual refund creation, operator flow, and webhook support.
 
 Folder:
@@ -106,7 +115,7 @@ Files:
 - `webhook-attempts.html` - example `GET /v1/webhooks/refund-attempts` integration
 - `webhook-logs.html` - example `GET /v1/webhooks/refund-logs` integration
 
-### 9. Navigation
+### 10. Navigation
 Open `index.html` in the repo root to jump into the examples quickly.
 
 ## Current API direction
@@ -127,6 +136,11 @@ Canonical routes used in this repo:
 - `GET https://api.tsara.ng/v1/stablecoin/offramp/status?provider_reference=...&refresh=1`
 - `POST https://api.tsara.ng/v1/bill/airtime`
 - `POST https://api.tsara.ng/v1/bill/electricity`
+- `POST https://api.tsara.ng/v1/fiat/transfers`
+- `GET https://api.tsara.ng/v1/fiat/transfers`
+- `GET https://api.tsara.ng/v1/fiat/transfers/banks`
+- `POST https://api.tsara.ng/v1/fiat/transfers/name-enquiry`
+- `POST https://api.tsara.ng/v1/fiat/transfers/status`
 - `POST https://api.tsara.ng/v1/payouts/name-enquiry`
 - `POST https://api.tsara.ng/v1/payouts`
 - `GET https://api.tsara.ng/v1/payouts`
@@ -352,6 +366,34 @@ curl -X POST https://api.tsara.ng/v1/bill/electricity \
   }'
 ```
 
+### Create fiat transfer
+```sh
+curl -X POST https://api.tsara.ng/v1/fiat/transfers \
+  -H "Authorization: Bearer sk_live_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 5000,
+    "source_bank_account_id": "bank_001",
+    "currency": "NGN",
+    "reference": "merchant_payout_001",
+    "idempotency_key": "merchant_payout_001_attempt_1",
+    "narration": "Vendor payment",
+    "beneficiary": {
+      "bank_code": "090286",
+      "account_number": "0110000000"
+    }
+  }'
+```
+
+A transfer reserves `amount + fee` before execution. Reusing an idempotency key with the exact same payload returns the existing transfer; changing the payload returns `409`.
+
+### Check fiat transfer status
+```sh
+curl -X POST https://api.tsara.ng/v1/fiat/transfers/status \
+  -H "Authorization: Bearer sk_live_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{"uid":"trf_1234567890"}'
+```
 ### Payout name enquiry
 ```sh
 curl -X POST https://api.tsara.ng/v1/payouts/name-enquiry \
