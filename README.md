@@ -74,13 +74,14 @@ Files:
 - `crypto-retry.html` - example `POST /v1/bill/crypto/retry` integration
 
 ### 7. Fiat Transfers
-Create, list, and reconcile business-owned fiat transfers.
+Create, list, and reconcile transfers from either the authenticated business wallet or a business-owned reserved account.
 
 Folder:
 - `fiat/`
 
 Files:
-- `transfers.html` - examples for `POST /v1/fiat/transfers`, transfer status, name enquiry, and bank listing
+- `business-wallet-transfers.html` - examples for `POST /v1/transfers`, transfer status, name enquiry, and bank listing
+- `transfers.html` - reserved-account examples for `POST /v1/fiat/transfers`, transfer status, name enquiry, and bank listing
 
 ### 8. Payouts
 Single and bulk payouts from a business account.
@@ -136,6 +137,11 @@ Canonical routes used in this repo:
 - `GET https://api.tsara.ng/v1/stablecoin/offramp/status?provider_reference=...&refresh=1`
 - `POST https://api.tsara.ng/v1/bill/airtime`
 - `POST https://api.tsara.ng/v1/bill/electricity`
+- `POST https://api.tsara.ng/v1/transfers`
+- `GET https://api.tsara.ng/v1/transfers`
+- `GET https://api.tsara.ng/v1/transfers/banks`
+- `POST https://api.tsara.ng/v1/transfers/name-enquiry`
+- `POST https://api.tsara.ng/v1/transfers/status`
 - `POST https://api.tsara.ng/v1/fiat/transfers`
 - `GET https://api.tsara.ng/v1/fiat/transfers`
 - `GET https://api.tsara.ng/v1/fiat/transfers/banks`
@@ -366,7 +372,34 @@ curl -X POST https://api.tsara.ng/v1/bill/electricity \
   }'
 ```
 
-### Create fiat transfer
+### Create business wallet transfer
+```sh
+curl -X POST https://api.tsara.ng/v1/transfers \
+  -H "Authorization: Bearer sk_live_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 5000,
+    "currency": "NGN",
+    "bank_code": "090286",
+    "account_number": "0110000000",
+    "reference": "merchant_transfer_001",
+    "idempotency_key": "merchant_transfer_001_attempt_1",
+    "narration": "Vendor payment",
+    "save_beneficiary": false
+  }'
+```
+
+This route uses the authenticated business wallet automatically; do not send a source account ID. It requires a live secret key and reserves `amount + fee` before provider execution.
+
+### Check business wallet transfer status
+```sh
+curl -X POST https://api.tsara.ng/v1/transfers/status \
+  -H "Authorization: Bearer sk_live_xxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{"uid":"trf_1234567890"}'
+```
+
+### Create reserved account transfer
 ```sh
 curl -X POST https://api.tsara.ng/v1/fiat/transfers \
   -H "Authorization: Bearer sk_live_xxxxx" \
@@ -387,7 +420,7 @@ curl -X POST https://api.tsara.ng/v1/fiat/transfers \
 
 A transfer reserves `amount + fee` before execution. Reusing an idempotency key with the exact same payload returns the existing transfer; changing the payload returns `409`.
 
-### Check fiat transfer status
+### Check reserved account transfer status
 ```sh
 curl -X POST https://api.tsara.ng/v1/fiat/transfers/status \
   -H "Authorization: Bearer sk_live_xxxxx" \

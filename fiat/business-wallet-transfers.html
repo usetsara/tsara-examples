@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Reserved Account Transfer API Example</title>
+  <title>Business Wallet Transfer API Example</title>
   <style>
     :root{--ink:#18212f;--muted:#64748b;--line:#d9e0e8;--paper:#fff;--wash:#f3f6f8;--brand:#e85d04;--brand-dark:#b94700;--navy:#13243a;--ok:#087443;--bad:#b42318}*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#fff8ef 0,#f4f7fa 42%,#eef3f6 100%);color:var(--ink);font-family:Georgia,"Times New Roman",serif;min-height:100vh}.shell{width:min(1080px,calc(100% - 32px));margin:36px auto}.eyebrow{color:var(--brand);font:700 12px/1.2 Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase}h1{font-size:clamp(34px,6vw,62px);line-height:.95;margin:10px 0 14px;max-width:750px}p{color:var(--muted);font:16px/1.6 Arial,sans-serif}.panel{background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 20px 60px rgba(20,35,50,.08);margin-top:20px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.field{display:grid;gap:7px}.full{grid-column:1/-1}label{font:700 11px/1.2 Arial,sans-serif;color:#536273;text-transform:uppercase;letter-spacing:.08em}input,button,textarea{font:15px/1.4 Arial,sans-serif}input,textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px 13px;background:#fff;color:var(--ink)}textarea{min-height:250px;resize:vertical;font-family:Consolas,monospace}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}button{border:0;border-radius:999px;padding:11px 17px;background:var(--navy);color:#fff;font-weight:700;cursor:pointer}button.primary{background:var(--brand)}button:hover{filter:brightness(.93)}button:disabled{opacity:.6;cursor:wait}.warning{border-left:4px solid var(--brand);padding:10px 14px;background:#fff5ea;margin-top:16px;font:14px/1.5 Arial,sans-serif}.status{display:inline-flex;margin-top:14px;padding:8px 12px;border-radius:999px;background:#edf2f7;font:700 13px/1 Arial,sans-serif}.status.ok{background:#eaf8f0;color:var(--ok)}.status.bad{background:#fff0ef;color:var(--bad)}code{font-family:Consolas,monospace}@media(max-width:720px){.shell{margin:22px auto}.grid{grid-template-columns:1fr}.full{grid-column:auto}.panel{padding:17px}}
   </style>
@@ -11,14 +11,13 @@
 <body>
   <main class="shell">
     <div class="eyebrow">Tsara API example</div>
-    <h1>Reserved account transfers</h1>
-    <p>Send NGN from a reserved account owned by the authenticated business. Reuse an idempotency key only for the exact same transfer request.</p>
+    <h1>Business wallet transfers</h1>
+    <p>Send NGN from the authenticated Tsara business wallet using a live secret key. Reuse an idempotency key only for the exact same transfer request.</p>
 
     <section class="panel">
       <div class="grid">
         <div class="field"><label for="baseUrl">API Base URL</label><input id="baseUrl" value="https://api.tsara.ng/v1"></div>
         <div class="field"><label for="secretKey">Secret Key</label><input id="secretKey" type="password" placeholder="sk_live_xxxxx"></div>
-        <div class="field"><label for="sourceId">Source Bank Account ID</label><input id="sourceId" placeholder="bank_001"></div>
         <div class="field"><label for="amount">Amount</label><input id="amount" type="number" min="1" step="0.01" value="5000"></div>
         <div class="field"><label for="currency">Currency</label><input id="currency" value="NGN"></div>
         <div class="field"><label for="reference">Business Reference</label><input id="reference" value="merchant_payout_001"></div>
@@ -28,7 +27,7 @@
         <div class="field"><label for="narration">Narration</label><input id="narration" value="Vendor payment"></div>
         <div class="field full"><label for="transferUid">Transfer UID (for status)</label><input id="transferUid" placeholder="trf_1234567890"></div>
       </div>
-      <div class="warning"><strong>Important:</strong> Create Transfer initiates a real transfer when a live key and funded source account are used.</div>
+      <div class="warning"><strong>Important:</strong> Create Transfer initiates a real transfer when a live key and funded business wallet are used.</div>
       <div class="actions">
         <button class="primary" data-action="create">Create Transfer</button>
         <button data-action="list">List Transfers</button>
@@ -59,15 +58,13 @@
     function transferPayload() {
       return {
         amount: Number($('amount').value),
-        source_bank_account_id: $('sourceId').value.trim(),
         currency: $('currency').value.trim(),
+        bank_code: $('bankCode').value.trim(),
+        account_number: $('accountNumber').value.trim(),
         reference: $('reference').value.trim(),
         idempotency_key: $('idempotencyKey').value.trim(),
         narration: $('narration').value.trim(),
-        beneficiary: {
-          bank_code: $('bankCode').value.trim(),
-          account_number: $('accountNumber').value.trim()
-        }
+        save_beneficiary: false
       };
     }
 
@@ -102,11 +99,11 @@
     }
 
     const actions = {
-      create: () => request('/fiat/transfers', 'POST', transferPayload()),
-      list: () => request('/fiat/transfers?page=1&limit=20'),
-      status: () => request('/fiat/transfers/status', 'POST', { uid: $('transferUid').value.trim() }),
-      banks: () => request('/fiat/transfers/banks'),
-      enquiry: () => request('/fiat/transfers/name-enquiry', 'POST', {
+      create: () => request('/transfers', 'POST', transferPayload()),
+      list: () => request('/transfers?page=1&limit=20'),
+      status: () => request('/transfers/status', 'POST', { uid: $('transferUid').value.trim() }),
+      banks: () => request('/transfers/banks'),
+      enquiry: () => request('/transfers/name-enquiry', 'POST', {
         bank_code: $('bankCode').value.trim(),
         account_number: $('accountNumber').value.trim()
       })
