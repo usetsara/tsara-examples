@@ -9,7 +9,7 @@
 <body>
   <h1>Fetch Payout</h1>
   <div class="card">
-    <label>Public Key</label><input id="publicKey" type="text" placeholder="pk_live_xxxxx">
+    <label>Secret Key</label><input id="secretKey" type="text" placeholder="sk_live_xxxxx">
     <label>Mode</label>
     <select id="mode"><option value="single">Single</option><option value="bulk">Bulk</option></select>
     <label>ID / UID / Reference</label><input id="reference" type="text" value="payout_001">
@@ -22,7 +22,7 @@
       const mode = document.getElementById('mode').value;
       const identifier = encodeURIComponent(document.getElementById('reference').value.trim());
       const url = mode === 'bulk' ? 'https://api.tsara.ng/v1/payouts/bulk?reference=' + identifier : 'https://api.tsara.ng/v1/payouts?reference=' + identifier;
-      const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + document.getElementById('publicKey').value.trim() } });
+      const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + document.getElementById('secretKey').value.trim() } });
       const text = await res.text();
       try { document.getElementById('output').textContent = JSON.stringify(JSON.parse(text), null, 2); } catch (e) { document.getElementById('output').textContent = text; }
     });

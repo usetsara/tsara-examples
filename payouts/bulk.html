@@ -10,7 +10,7 @@
   <h1>Create Bulk Payout</h1>
   <div class="card">
     <div class="grid">
-      <div><label>Public Key</label><input id="publicKey" type="text" placeholder="pk_live_xxxxx"></div>
+      <div><label>Secret Key</label><input id="secretKey" type="text" placeholder="sk_live_xxxxx"></div>
       <div><label>Source Account Number</label><input id="sourceAccountNumber" type="text" value="0111632855"></div>
       <div><label>Reference</label><input id="reference" type="text" value="bulk_payout_001"></div>
       <div><label>Idempotency Key</label><input id="idempotencyKey" type="text" value="bulk-idem-001"></div>
@@ -48,7 +48,7 @@
       };
       const res = await fetch('https://api.tsara.ng/v1/payouts/bulk', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + document.getElementById('publicKey').value.trim() },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + document.getElementById('secretKey').value.trim() },
         body: JSON.stringify(payload)
       });
       const text = await res.text();

@@ -21,7 +21,7 @@
   <h1>Reconcile Payout</h1>
   <div class="card">
     <div class="grid">
-      <div><label>Public Key</label><input id="publicKey" type="text" placeholder="pk_live_xxxxx"></div>
+      <div><label>Secret Key</label><input id="secretKey" type="text" placeholder="sk_live_xxxxx"></div>
       <div>
         <label>Type</label>
         <select id="type">
@@ -53,7 +53,7 @@
       if (document.getElementById('providerReference').value.trim()) params.set('provider_reference', document.getElementById('providerReference').value.trim());
       params.set('refresh', document.getElementById('refresh').value);
       const res = await fetch('https://api.tsara.ng/v1/payouts/reconcile?' + params.toString(), {
-        headers: { 'Authorization': 'Bearer ' + document.getElementById('publicKey').value.trim() }
+        headers: { 'Authorization': 'Bearer ' + document.getElementById('secretKey').value.trim() }
       });
       const text = await res.text();
       let parsed;

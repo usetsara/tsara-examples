@@ -10,7 +10,7 @@
   <h1>List Payout Webhook Attempts</h1>
   <div class="card">
     <div class="grid">
-      <div><label>Public Key</label><input id="publicKey" type="text" placeholder="pk_live_xxxxx"></div>
+      <div><label>Secret Key</label><input id="secretKey" type="text" placeholder="sk_live_xxxxx"></div>
       <div><label>Payout Reference</label><input id="reference" type="text" value="payout_001"></div>
       <div><label>Item Reference</label><input id="itemReference" type="text" placeholder="payout_001_item_1"></div>
       <div><label>Event</label><select id="event"><option value="">Any</option><option value="payout.item.processing">payout.item.processing</option><option value="payout.item.successful">payout.item.successful</option><option value="payout.item.failed">payout.item.failed</option><option value="payout.batch.completed">payout.batch.completed</option></select></div>
@@ -29,8 +29,8 @@
       if (document.getElementById('event').value) params.set('event', document.getElementById('event').value);
       if (document.getElementById('deliveryStatus').value) params.set('delivery_status', document.getElementById('deliveryStatus').value);
       if (document.getElementById('attemptType').value) params.set('attempt_type', document.getElementById('attemptType').value);
-      const res = await fetch('https://api.tsara.ng/v1/webhook/payout/attempts?' + params.toString(), {
-        headers: { 'Authorization': 'Bearer ' + document.getElementById('publicKey').value.trim() }
+      const res = await fetch('https://api.tsara.ng/v1/payouts/webhook-attempts?' + params.toString(), {
+        headers: { 'Authorization': 'Bearer ' + document.getElementById('secretKey').value.trim() }
       });
       const text = await res.text();
       try { document.getElementById('output').textContent = JSON.stringify(JSON.parse(text), null, 2); }

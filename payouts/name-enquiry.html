@@ -9,7 +9,7 @@
 <body>
   <h1>Payout Name Enquiry</h1>
   <div class="card">
-    <label>Public Key</label><input id="publicKey" type="text" placeholder="pk_live_xxxxx">
+    <label>Secret Key</label><input id="secretKey" type="text" placeholder="sk_live_xxxxx">
     <label>Bank Code</label><input id="bankCode" type="text" value="090286">
     <label>Account Number</label><input id="accountNumber" type="text" value="0110000000">
     <button id="run">Run Name Enquiry</button>
@@ -20,7 +20,7 @@
     document.getElementById('run').addEventListener('click', async function () {
       const res = await fetch('https://api.tsara.ng/v1/payouts/name-enquiry', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + document.getElementById('publicKey').value.trim() },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + document.getElementById('secretKey').value.trim() },
         body: JSON.stringify({ bank_code: document.getElementById('bankCode').value.trim(), account_number: document.getElementById('accountNumber').value.trim() })
       });
       const text = await res.text();

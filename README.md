@@ -2,6 +2,8 @@
 
 This repository provides small, working examples for integrating Tsara checkout and payment APIs.
 
+The HTML API forms are local development harnesses. They may ask for a secret key so you can exercise server endpoints, but production applications must keep secret keys on the server and must not expose them in browser code.
+
 ## Examples
 
 ### 1. Checkout Form (Hosted on Your Site)
@@ -11,7 +13,7 @@ Folder:
 - `checkout/`
 
 Files:
-- `index.html` - example checkout page using `https://checkout.tsara.ng/inline.js`
+- `index.html` - example checkout page using the pinned `@tsara/checkout-js@0.1.0` browser build
 - `webhook.php` - example webhook handler with signature verification
 
 ### 2. Checkout Link (Create via API, Redirect to Tsara)
@@ -96,9 +98,9 @@ Files:
 - `fetch.html` - example `GET /v1/payouts` and `GET /v1/payouts/bulk` integration
 - `reconcile.html` - example `GET /v1/payouts/reconcile` integration
 - `webhook.php` - example payout webhook handler with signature verification
-- `webhook-resend.html` - example `POST /v1/webhook/payout/resend` integration
-- `webhook-attempts.html` - example `GET /v1/webhook/payout/attempts` integration
-- `webhook-logs.html` - example `GET /v1/webhook/payout/logs` integration
+- `webhook-resend.html` - example `POST /v1/payouts/webhook-resend` integration
+- `webhook-attempts.html` - example `GET /v1/payouts/webhook-attempts` integration
+- `webhook-logs.html` - explains why payout delivery history uses the attempts endpoint
 
 ### 9. Refunds
 Manual refund creation, operator flow, and webhook support.
@@ -112,17 +114,28 @@ Files:
 - `process.html` - example `POST /v1/refunds/process` integration
 - `finalize.html` - example `POST /v1/refunds/finalize` integration
 - `webhook.php` - example refund webhook handler with signature verification
-- `webhook-resend.html` - example `POST /v1/webhooks/refund-resend` integration
-- `webhook-attempts.html` - example `GET /v1/webhooks/refund-attempts` integration
-- `webhook-logs.html` - example `GET /v1/webhooks/refund-logs` integration
+- `webhook-resend.html` - example `POST /v1/webhook/refund-resend` integration
+- `webhook-attempts.html` - example `GET /v1/webhook/refund-attempts` integration
+- `webhook-logs.html` - example `GET /v1/webhook/refund-logs` integration
 
-### 10. Navigation
+### 10. Official SDKs
+Install and use the official PHP, Node.js, and browser Checkout packages.
+
+Folder:
+- `sdk/`
+
+Files:
+- `README.md` - server and browser SDK quickstart
+- `node-starter/` - runnable Node.js Checkout, status, and webhook example
+- `php-starter/` - runnable PHP Checkout, status, and webhook example
+
+### 11. Navigation
 Open `index.html` in the repo root to jump into the examples quickly.
 
 ## Current API direction
 
 Canonical routes used in this repo:
-- `POST https://api.tsara.ng/v1/checkout/create`
+- `POST https://api.tsara.ng/v1/checkout`
 - `POST https://api.tsara.ng/v1/customers`
 - `GET https://api.tsara.ng/v1/customers`
 - `POST https://api.tsara.ng/v1/customers/update`
@@ -153,16 +166,15 @@ Canonical routes used in this repo:
 - `GET https://api.tsara.ng/v1/payouts/reconcile`
 - `POST https://api.tsara.ng/v1/payouts/bulk`
 - `GET https://api.tsara.ng/v1/payouts/bulk`
-- `POST https://api.tsara.ng/v1/webhook/payout/resend`
-- `GET https://api.tsara.ng/v1/webhook/payout/logs`
-- `GET https://api.tsara.ng/v1/webhook/payout/attempts`
+- `POST https://api.tsara.ng/v1/payouts/webhook-resend`
+- `GET https://api.tsara.ng/v1/payouts/webhook-attempts`
 - `POST https://api.tsara.ng/v1/refunds`
 - `GET https://api.tsara.ng/v1/refunds`
 - `POST https://api.tsara.ng/v1/refunds/process`
 - `POST https://api.tsara.ng/v1/refunds/finalize`
-- `POST https://api.tsara.ng/v1/webhooks/refund-resend`
-- `GET https://api.tsara.ng/v1/webhooks/refund-logs`
-- `GET https://api.tsara.ng/v1/webhooks/refund-attempts`
+- `POST https://api.tsara.ng/v1/webhook/refund-resend`
+- `GET https://api.tsara.ng/v1/webhook/refund-logs`
+- `GET https://api.tsara.ng/v1/webhook/refund-attempts`
 - `POST https://api.tsara.ng/v1/bill/crypto`
 - `GET https://api.tsara.ng/v1/bill/crypto`
 - `GET https://api.tsara.ng/v1/bill/crypto/reconcile`
@@ -246,8 +258,7 @@ curl "https://api.tsara.ng/v1/payment-links/transactions?uid=plink_1234567890&st
 
 ### Checkout
 ```sh
-curl -X POST https://api.tsara.ng/v1/checkout/create \
-  -H "Authorization: Bearer sk_live_xxxxx" \
+curl -X POST https://api.tsara.ng/v1/checkout \
   -H "Content-Type: application/json" \
   -d '{
     "public_key": "pk_live_xxxxx",
@@ -497,7 +508,7 @@ curl "https://api.tsara.ng/v1/payouts/reconcile?type=single&reference=payout_001
 
 ### Resend payout webhook
 ```sh
-curl -X POST https://api.tsara.ng/v1/webhook/payout/resend \
+curl -X POST https://api.tsara.ng/v1/payouts/webhook-resend \
   -H "Authorization: Bearer sk_live_xxxxx" \
   -H "Content-Type: application/json" \
   -d '{
@@ -508,13 +519,7 @@ curl -X POST https://api.tsara.ng/v1/webhook/payout/resend \
 
 ### List payout webhook attempts
 ```sh
-curl "https://api.tsara.ng/v1/webhook/payout/attempts?reference=payout_001" \
-  -H "Authorization: Bearer sk_live_xxxxx"
-```
-
-### List payout webhook logs
-```sh
-curl "https://api.tsara.ng/v1/webhook/payout/logs?reference=payout_001&limit=20" \
+curl "https://api.tsara.ng/v1/payouts/webhook-attempts?reference=payout_001" \
   -H "Authorization: Bearer sk_live_xxxxx"
 ```
 
@@ -565,19 +570,19 @@ curl -X POST https://api.tsara.ng/v1/refunds/finalize   -H "Authorization: Beare
 
 ### Resend refund webhook
 ```sh
-curl -X POST https://api.tsara.ng/v1/webhooks/refund-resend   -H "Authorization: Bearer sk_live_xxxxx"   -H "Content-Type: application/json"   -d '{
+curl -X POST https://api.tsara.ng/v1/webhook/refund-resend   -H "Authorization: Bearer sk_live_xxxxx"   -H "Content-Type: application/json"   -d '{
     "reference": "rf_order_001"
   }'
 ```
 
 ### List refund webhook attempts
 ```sh
-curl "https://api.tsara.ng/v1/webhooks/refund-attempts?reference=rf_order_001"   -H "Authorization: Bearer sk_live_xxxxx"
+curl "https://api.tsara.ng/v1/webhook/refund-attempts?reference=rf_order_001"   -H "Authorization: Bearer sk_live_xxxxx"
 ```
 
 ### List refund webhook logs
 ```sh
-curl "https://api.tsara.ng/v1/webhooks/refund-logs?reference=rf_order_001&limit=20"   -H "Authorization: Bearer sk_live_xxxxx"
+curl "https://api.tsara.ng/v1/webhook/refund-logs?reference=rf_order_001&limit=20"   -H "Authorization: Bearer sk_live_xxxxx"
 ```
 
 ### Refund webhook payloads

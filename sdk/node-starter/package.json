@@ -1,0 +1,13 @@
+{
+  "name": "tsara-node-checkout-starter",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node --check server.mjs"
+  },
+  "dependencies": {
+    "@tsara/node": "^0.1.1"
+  }
+}

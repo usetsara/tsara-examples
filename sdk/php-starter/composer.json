@@ -1,0 +1,10 @@
+{
+  "name": "tsara/php-checkout-starter",
+  "description": "Runnable Tsara PHP checkout starter",
+  "type": "project",
+  "license": "MIT",
+  "require": {
+    "php": "^8.2",
+    "tsara/tsara-php": "^0.1"
+  }
+}

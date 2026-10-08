@@ -17,8 +17,7 @@
                     <div class="card-body p-4">
                         <h1 class="h3 mb-3">Tsara Inline Checkout</h1>
                         <p class="text-muted mb-4">
-                            This example opens Tsara checkout with the inline script. Replace the placeholder values with your real public key,
-                            customer data, and redirect URLs for success, cancel, and timeout handling.
+                            This example opens a Checkout transaction that your server already created. Replace the public key and transaction ID below. Never put a secret key in this page.
                         </p>
 
                         <div class="alert alert-info small">
@@ -63,78 +62,39 @@
             document.getElementById('result').textContent = JSON.stringify(payload, null, 2);
         }
 
-        function buildCheckoutPayload(data) {
-            return {
-                public_key: 'pk_live_xxxxx',
-                trx_id: data.trx_id,
-                amount: data.amount,
-                amount_type: 'fiat',
-                currency: 'NGN',
-                email: data.email,
-                phone: data.phone,
-                name: data.name,
-                meta: {
-                    customer_id: data.user_id,
-                    source: 'tsara-examples-inline'
-                },
-                customer: {
-                    email: data.email,
-                    phone: data.phone,
-                    name: data.name
-                },
-                redirect_url: data.redirect_url,
-                success_url: data.success_url,
-                cancel_url: data.cancel_url,
-                timeout_url: data.timeout_url,
-                customizations: {
-                    title: 'Business Name',
-                    description: 'Fund Wallet',
-                    logo: ''
-                },
-                callback: function (response) {
-                    setStatus('Checkout completed.', 'mt-3 small text-success');
-                    setResult({ type: 'success', response: response });
-                },
-                onClose: function () {
-                    setStatus('Checkout closed by user.', 'mt-3 small text-warning');
-                    setResult({ type: 'closed' });
-                },
-                onError: function (error) {
-                    setStatus('Checkout failed.', 'mt-3 small text-danger');
-                    setResult({ type: 'error', error: error });
-                }
-            };
-        }
-
         function openCheckout() {
             const button = document.getElementById('payButton');
-
             button.disabled = true;
-            setStatus('Opening checkout...', 'mt-3 small text-muted');
+            setStatus('Opening checkout...', 'text-muted');
             setResult({ type: 'pending' });
 
-            const payload = buildCheckoutPayload({
-                trx_id: 'ORDER-1234567890',
-                amount: 1000,
-                email: 'customer@example.com',
-                phone: '08012345678',
-                name: 'Test Client',
-                user_id: '123456',
-                redirect_url: 'https://yourwebsite.com/checkout/return',
-                success_url: 'https://yourwebsite.com/checkout/success',
-                cancel_url: 'https://yourwebsite.com/checkout/cancelled',
-                timeout_url: 'https://yourwebsite.com/checkout/expired'
-            });
-
             try {
-                tsara.pay(payload);
-                setStatus('Checkout opened.', 'mt-3 small text-success');
+                TsaraCheckout.open({
+                    publicKey: 'pk_test_xxxxx',
+                    transactionId: 'ORDER-1234567890',
+                    onLoad: function () {
+                        button.disabled = false;
+                        setStatus('Checkout loaded.', 'text-success');
+                    },
+                    onSuccess: function (result) {
+                        setStatus('Checkout completed. Verify it on your server.', 'text-success');
+                        setResult({ type: 'success', result: result });
+                    },
+                    onCancel: function (context) {
+                        button.disabled = false;
+                        setStatus('Checkout closed.', 'text-warning');
+                        setResult({ type: 'cancel', context: context });
+                    },
+                    onError: function (error) {
+                        button.disabled = false;
+                        setStatus('Checkout failed.', 'text-danger');
+                        setResult({ type: 'error', message: error.message });
+                    }
+                });
             } catch (error) {
-                console.error(error);
-                setStatus('Failed to open checkout.', 'mt-3 small text-danger');
-                setResult({ type: 'exception', error: String(error) });
-            } finally {
                 button.disabled = false;
+                setStatus('Failed to open checkout.', 'text-danger');
+                setResult({ type: 'exception', message: error.message });
             }
         }
 
@@ -144,7 +104,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
-    <script src="https://checkout.tsara.ng/inline.js?v=1"></script>
+    <script src="https://unpkg.com/@tsara/checkout-js@0.1.0/dist/index.global.js"></script>
 </body>
 
 </html>

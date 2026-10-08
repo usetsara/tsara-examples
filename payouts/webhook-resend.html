@@ -10,7 +10,7 @@
   <h1>Resend Payout Webhook</h1>
   <div class="card">
     <div class="grid">
-      <div><label>Public Key</label><input id="publicKey" type="text" placeholder="pk_live_xxxxx"></div>
+      <div><label>Secret Key</label><input id="secretKey" type="text" placeholder="sk_live_xxxxx"></div>
       <div><label>Payout Reference</label><input id="reference" type="text" value="payout_001"></div>
       <div><label>Payout UID (optional)</label><input id="uid" type="text" placeholder="pwdg_1234567890"></div>
       <div><label>Item Reference (optional)</label><input id="itemReference" type="text" placeholder="payout_001_item_1"></div>
@@ -25,9 +25,9 @@
       if (document.getElementById('reference').value.trim()) payload.reference = document.getElementById('reference').value.trim();
       if (document.getElementById('uid').value.trim()) payload.uid = document.getElementById('uid').value.trim();
       if (document.getElementById('itemReference').value.trim()) payload.item_reference = document.getElementById('itemReference').value.trim();
-      const res = await fetch('https://api.tsara.ng/v1/webhook/payout/resend', {
+      const res = await fetch('https://api.tsara.ng/v1/payouts/webhook-resend', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + document.getElementById('publicKey').value.trim() },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + document.getElementById('secretKey').value.trim() },
         body: JSON.stringify(payload)
       });
       const text = await res.text();
